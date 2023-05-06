@@ -16,12 +16,36 @@
   }
 }
 
+@font-face {
+  font-family: 'Instagram';
+  src: url('/instagram-font.otf');
+  font-weight: 400;
+  font-style: normal;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background-color: #dfdfdf;
+  color: #101010;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+.font-instagram {
+  font-family: 'Instagram';
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+}
+
+.rounded-fixed {
+  border-radius: 1rem;
+  -moz-border-radius: 1rem;
+  -webkit-border-radius: 1rem;
 }
