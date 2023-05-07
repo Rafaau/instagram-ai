@@ -17,9 +17,9 @@ type PageProps = {
     }
 }
 
-async function fetchPhotos(amount: number) {
+async function fetchSinglePhoto() {
     const usedIndexes = JSON.parse(localStorage.getItem('usedIndexes') || '[]')
-    return fetchData(`randomPhotos?amount=${amount}&usedIndexes=${JSON.stringify(usedIndexes)}`)
+    return fetchData(`randomPhoto?usedIndexes=${JSON.stringify(usedIndexes)}`)
 }
 
 export default function UserProfile({ params: { userName } }: PageProps) {
@@ -34,12 +34,11 @@ export default function UserProfile({ params: { userName } }: PageProps) {
         if (!user) {
             router.push('/')
         } else if (user?.photos!.length == 0)
-            fetchPhotos(user?.posts!).then((photos) => {
-                let fetchedPhotos: Photo[] = []
-                photos.srcs.forEach(async (src: string, index: number) => {
+            for (let i = 0; i < user?.posts!; i++) {
+                fetchSinglePhoto().then(async (photo) => {
                     const newPhoto: Photo = {
-                        index: index,
-                        imageSrc: src,
+                        index: i,
+                        imageSrc: photo.src,
                         user: { 
                             userName: user.userName, 
                             userImage: user.userImage,
@@ -54,14 +53,13 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                         postDate: getPostDate(),
                         isDispatched: true
                     }
-                    fetchedPhotos.push(newPhoto)
+                    user.photos!.push(newPhoto)
+                    dispatch({ type: 'SET_USERS', payload: [
+                        ...state.users,
+                        user
+                    ]})
                 })
-                user.photos = fetchedPhotos
-                dispatch({ type: 'SET_USERS', payload: [
-                    ...state.users,
-                    user
-                ]})
-            })
+            }
     }, [state.users])
 
     const redirectToHome = () => {
