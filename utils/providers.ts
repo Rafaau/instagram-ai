@@ -4,7 +4,7 @@ import { Comment } from "@component/typings"
 export async function fetchUsername() {
     const response = await fetch('https://names.drycodes.com/1?nameOptions=girl_names&case=lower')
     const data = await response.json()
-    return data
+    return data[0]
 }
 
 export async function fetchComment(reps: number = 1) {
@@ -15,7 +15,7 @@ export async function fetchComment(reps: number = 1) {
         //const userImage = await fetchSinglePhoto()
         comments.push({
             content: res.content,
-            user: { userName: userName[0] },
+            user: { userName: userName },
             postDate: getPostDate(),
             isLiked: false,
             likes: Math.floor(Math.random() * 1),
@@ -77,4 +77,9 @@ export async function getComments(likes: number) {
             break
     } 
     return comments
+}
+
+export async function fetchSinglePhoto() {
+    const usedIndexes = JSON.parse(localStorage.getItem('usedIndexes') || '[]')
+    return fetchData(`randomPhoto?usedIndexes=${JSON.stringify(usedIndexes)}`)
 }

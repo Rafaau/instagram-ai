@@ -12,12 +12,7 @@ import { motion as m } from 'framer-motion'
 import { TextAnimation } from "@component/styles/textAnimation";
 import { useRouter } from "next/navigation";
 import { AppContext } from "@component/contexts/appContext";
-import { fetchUsername, getComments, getPostDate } from "@component/utils/providers";
-
-async function fetchSinglePhoto() {
-    const usedIndexes = JSON.parse(localStorage.getItem('usedIndexes') || '[]')
-    return fetchData(`randomPhoto?usedIndexes=${JSON.stringify(usedIndexes)}`)
-}
+import { fetchSinglePhoto, fetchUsername, getComments, getPostDate } from "@component/utils/providers";
 
 const enum View {
     PHOTOS,
@@ -68,7 +63,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         index: prevPhotos.length,
                         imageSrc: photo.src,
                         user: { 
-                            userName: username[0], 
+                            userName: username, 
                             userImage: photo.src,
                             followers: Math.floor(Math.random() * likes * 4),
                             following: Math.floor(Math.random() * 200),

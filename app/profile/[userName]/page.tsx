@@ -11,11 +11,18 @@ import { fetchBio, getComments, getPostDate } from "@component/utils/providers"
 import { AppContext } from "@component/contexts/appContext"
 import PhotosList from "@component/app/PhotosList"
 import { TypeAnimation } from "react-type-animation"
+import { FollowsList } from "../FollowsList"
 
 type PageProps = {
     params: {
         userName: string
     }
+}
+
+export const enum View {
+    PROFILE,
+    FOLLOWERS,
+    FOLLOWING
 }
 
 async function fetchSinglePhoto() {
@@ -30,6 +37,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     const user = state.users.find(user => user.userName == userName)
     const [imageLoaded, setImageLoaded] = useState<boolean[]>(Array(user?.posts).fill(false) || [])
     const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null)
+    const [view, setView] = useState<View>(View.PROFILE)
 
     useEffect(() => {
         if (!user) {
@@ -107,9 +115,13 @@ export default function UserProfile({ params: { userName } }: PageProps) {
         })
     }
 
+    const handleSetView = (view: View) => {
+        setView(view)
+    }
+
     return (
-        <div className="hide-scrollbar h-[100%]">
-            {!currentPhoto && user && 
+        <div className="hide-scrollbar h-[100%] relative items-center">
+            {!currentPhoto && user &&
                 <m.div
                     initial={{ x: '-100%' }}
                     animate={{ x: redirectAnimation ? '-100%' : '0%' }}
@@ -138,7 +150,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                             />
                             <p className="text-[2vh]">Posts</p>                        
                         </div>
-                        <div className="ml-[3vh] mt-[1vh] text-center">
+                        <div className="ml-[3vh] mt-[1vh] text-center cursor-pointer" onClick={() => handleSetView(View.FOLLOWERS)}>
                             {user?.photos?.length! < 2 && <TypeAnimation
                                 sequence={[user?.photos?.length == user?.posts ? 0 : 700, user!.followers!.toString() ]}
                                 wrapper="p"
@@ -152,7 +164,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                             }
                             <p className="text-[2vh]">Followers</p>   
                         </div>
-                        <div className="ml-[3vh] mt-[1vh] text-center">
+                        <div className="ml-[3vh] mt-[1vh] text-center cursor-pointer" onClick={() => handleSetView(View.FOLLOWING)}>
                             <TypeAnimation
                                 sequence={[user?.photos?.length! > 2 ? 0 : 900, user!.following!.toString() ]}
                                 wrapper="p"
@@ -216,6 +228,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                     photoIndex={currentPhoto.index} 
                     photoLiked={(photo: Photo) => likeOrUnlikePhoto(photo)}/>
             }
+            {view != View.PROFILE && <FollowsList user={user!} view={view} setViewCallback={(view: View) => handleSetView(view)}/>}
         </div>
     )
 }
