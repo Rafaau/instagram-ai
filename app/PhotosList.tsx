@@ -27,10 +27,11 @@ const enum View {
 interface PageProps {
     fetchedPhotos?: Photo[]
     onBackToProfile?: () => void,
-    photoIndex?: number
+    photoIndex?: number,
+    photoLiked?: (photo: Photo) => void
 }
 
-export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex }: PageProps) {
+export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex, photoLiked }: PageProps) {
     const { state, dispatch } = useContext(AppContext)
     const [photos, setPhotos] = useState<Photo[]>([])
     const containerRef = useRef<any>()
@@ -49,7 +50,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex 
     var TextareaAutosize = require('react-textarea-autosize').default;
 
     const fetchPhoto = async () => {
-        if (isLoading || isRunOut) return
+        if (isLoading || isRunOut || fetchedPhotos) return
         setLoading(true)
         isLoading = true
         setTimeout(() => {
@@ -71,7 +72,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex 
                             userImage: photo.src,
                             followers: Math.floor(Math.random() * likes * 4),
                             following: Math.floor(Math.random() * 200),
-                            posts: Math.floor(Math.random() * 30), 
+                            posts: Math.floor(Math.random() * 25 + 5), 
                             photos: []
                         },
                         likes: likes,
@@ -158,7 +159,9 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex 
               }
               return p;
             })
-          )
+        )
+        if (photoLiked) photoLiked(photo)
+        dispatch({ type: 'LIKE_OR_UNLIKE', payload: { photo } })
     }
 
     const handleImageLoad = (index: number) => {
@@ -315,13 +318,15 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex 
                                 />             
                             </p>      
                             {photo.comments.length > 1 &&
-                                <TypeAnimation
-                                    sequence={[photo.isDispatched ? 0 : 3800, 'View all comments ' + photo.comments.length ]}
-                                    wrapper="p"
-                                    className="px-[1.5vh] pt-[1vh] text-gray-500 text-[2vh] cursor-pointer mb-0"
-                                    cursor={false}
-                                    speed={photo.isDispatched ? 99 : 60}
-                                />   
+                                <div onClick={() => handleViewComments(photo)}>
+                                    <TypeAnimation
+                                        sequence={[photo.isDispatched ? 0 : 3800, 'View all comments ' + photo.comments.length ]}
+                                        wrapper="p"
+                                        className="px-[1.5vh] pt-[1vh] text-gray-500 text-[2vh] cursor-pointer mb-0"
+                                        cursor={false}
+                                        speed={photo.isDispatched ? 99 : 60}
+                                    />   
+                                </div>
                             }
                             {photo.comments.length > 0 && (
                             <p className="px-[1.5vh] mt-[1vh] leading-[2.5vh]" key={photo.comments[0].userName}>

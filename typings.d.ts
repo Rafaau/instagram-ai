@@ -12,6 +12,8 @@ export type User = {
     followers?: number
     following?: number
     posts?: number
+    isFollowed?: boolean
+    bio?: string
 }
 
 export type Photo = {

@@ -25,6 +25,11 @@ export async function fetchComment(reps: number = 1) {
     return comments
 }
 
+export async function fetchBio() {
+    const response = await fetchData('randomBio')
+    return response.bio
+}
+
 export function getPostDate() {
     const hours = Math.floor(Math.random() * 96)
     let postDate: string
@@ -56,15 +61,15 @@ export async function getComments(likes: number) {
             comments = []
             break
         case (likes > 100 && likes < 1000):
-            random = Math.floor(Math.random() * 30)
+            random = Math.floor(Math.random() * 3)
             comments = await fetchComment(random)
             break
         case (likes > 1000 && likes < 3000):
-            random = Math.floor(Math.random() * 30)
+            random = Math.floor(Math.random() * 6)
             comments = await fetchComment(random)
             break
         case (likes > 3000 && likes <= 5000):
-            random = Math.floor(Math.random() * 30)
+            random = Math.floor(Math.random() * 9)
             comments = await fetchComment(random)
             break
         default:

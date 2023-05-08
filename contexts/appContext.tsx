@@ -37,13 +37,32 @@ const appReducer = (state: AppState, action: AppAction) => {
             return {
                 ...state,
                 photos: state.photos.map(photo => {
-                    if (photo.user === action.payload.user) {
+                    if (photo.imageSrc == action.payload.photo.imageSrc
+                        && photo.likes == action.payload.photo.likes) {
                         return {
                             ...photo,
                             isLiked: !photo.isLiked
                         }
                     }
                     return photo
+                }),
+                users: state.users.map(user => {
+                    if (user.userName == action.payload.photo.user.userName) {
+                        return {
+                            ...user,
+                            photos: user.photos!.map(photo => {
+                                if (photo.imageSrc == action.payload.photo.imageSrc
+                                    && photo.likes == action.payload.photo.likes) {
+                                    return {
+                                        ...photo,
+                                        isLiked: !photo.isLiked
+                                    }
+                                }
+                                return photo
+                            })
+                        }
+                    }
+                    return user
                 })
             }
         case 'ADD_COMMENT':
