@@ -7,7 +7,7 @@ export type AppState = {
 }
 
 type AppAction = {
-    type: 'SET_PHOTOS' | 'LIKE_OR_UNLIKE' | 'ADD_COMMENT' | 'SET_USERS'
+    type: 'SET_PHOTOS' | 'LIKE_OR_UNLIKE' | 'ADD_COMMENT' | 'SET_USERS' | 'FOLLOW_OR_UNFOLLOW'
     payload: any
 }
 
@@ -82,6 +82,20 @@ const appReducer = (state: AppState, action: AppAction) => {
             return {
                 ...state,
                 users: action.payload
+            }
+        case 'FOLLOW_OR_UNFOLLOW':
+            return {
+                ...state,
+                users: state.users.map(user => {
+                    if (user.userName == action.payload.userName) {
+                        return {
+                            ...user,
+                            isFollowed: !user.isFollowed,
+                            followers: user.followers! + (user.isFollowed ? -1 : 1)
+                        }
+                    }
+                    return user
+                })
             }
         default:
             return state

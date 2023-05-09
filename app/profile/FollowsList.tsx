@@ -1,13 +1,15 @@
 import { Photo, User } from '@component/typings'
 import { faXmark as close } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { motion as m } from 'framer-motion'
 import { View } from './[userName]/page'
 import { ClipLoader } from 'react-spinners'
 import { fetchSinglePhoto, fetchUsername } from '@component/utils/providers'
 import { AppContext } from '@component/contexts/appContext'
 import { useRouter } from 'next/navigation'
+import { TypeAnimation } from 'react-type-animation'
+import { get } from 'http'
 
 interface PageProps {
     user: User,
@@ -21,44 +23,83 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
     const [loading, setLoading] = useState(false)
     const [followers, setFollowers] = useState<User[]>([])
     const [following, setFollowing] = useState<User[]>([])
+    const [followerImageLoaded, setFollowerImageLoaded] = useState<boolean[]>(Array(user?.posts).fill(false) || [])
+    const [followingImageLoaded, setFollowingImageLoaded] = useState<boolean[]>(Array(user?.posts).fill(false) || [])
+    const followersContainerRef = useRef<any>()
+    const followingContainerRef = useRef<any>()
     const router = useRouter()
+    let isLoading = false
+    let followersCount = 0
+    let followingCount = 0
 
     useEffect(() => {
         const container = document.getElementById('container')!
         const boxWidth = container?.offsetWidth
-        if (view == View.FOLLOWERS) {
-            setLoading(true)
-            container.scrollBy({ left: -boxWidth - 1,  behavior: 'smooth' })
+        const fetchFollowers = async () => {
             if (user.followers == 0 || followers.length >= 8) return
-            for (let i = 0; i < 8; i++) {
-                fetchSinglePhoto().then(async (photo) => {
-                    const user: User = {
-                        userName: await fetchUsername(),
-                        userImage: photo.src,
-                        isFollowed: false,
-                        followers: Math.floor(Math.random() * 2500 * 4),
-                        following: Math.floor(Math.random() * 200),
-                        posts: Math.floor(Math.random() * 25 + 5), 
-                        photos: []
-                    }
-                    setFollowers((followers) => [...followers, user])
-                })
-            }
-        } else if (view == View.FOLLOWING) {
-            container.scrollBy({ left: boxWidth + 1,  behavior: 'smooth' })
-            if (user.following == 0 || following.length >= 8) return
-            for (let i = 0; i < 8; i++) {
-                fetchSinglePhoto().then(async (photo) => {
-                    const user: User = {
-                        userName: await fetchUsername(),
-                        userImage: photo.src,
-                        isFollowed: false,
-                    }
-                    setFollowing((following) => [...following, user])
-                })
+            for (let i = 1; i < 9; i++) {
+                if (i > user.followers!) return
+                await getFollower()
             }
         }
+        const fetchFollowing = async () => {
+            if (user.following == 0 || following.length >= 8) return
+            for (let i = 1; i < 9; i++) {
+                if (i > user.following!) return
+                await getFollowing()
+            }
+        }
+        if (view == View.FOLLOWERS) {
+            container.scrollBy({ left: -boxWidth - 1,  behavior: 'smooth' })
+            fetchFollowers()
+        } else if (view == View.FOLLOWING) {
+            container.scrollBy({ left: boxWidth + 1,  behavior: 'smooth' })
+            fetchFollowing()
+        }
     }, [view])
+
+    const getFollower = async () => {
+        console.log('followers')
+        setLoading(true)
+        isLoading = true
+
+        const photo = await fetchSinglePhoto()
+        const user: User = {
+            userName: await fetchUsername(),
+            userImage: photo.src,
+            isFollowed: false,
+            followers: Math.floor(Math.random() * 2500 * 4),
+            following: Math.floor(Math.random() * 200),
+            posts: Math.floor(Math.random() * 25 + 5), 
+            photos: []
+        }
+        setFollowers((followers) => [...followers, user])
+
+        setTimeout(() => {
+            isLoading = false
+        }, 2000)
+    }
+
+    const getFollowing = async () => {
+        setLoading(true)
+        isLoading = true
+
+        const photo = await fetchSinglePhoto()
+        const user: User = {
+            userName: await fetchUsername(),
+            userImage: photo.src,
+            isFollowed: false,
+            followers: Math.floor(Math.random() * 2500 * 4),
+            following: Math.floor(Math.random() * 200),
+            posts: Math.floor(Math.random() * 25 + 5), 
+            photos: []
+        }
+        setFollowing((following) => [...following, user])
+
+        setTimeout(() => {
+            isLoading = false
+        }, 2000)
+    }
 
     const handleBackToProfile = () => {
         setRedirectAnimation(true)
@@ -78,6 +119,47 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
             router.push(`/profile/${user.userName}`)
         }, 300)
     }
+
+    useEffect(() => {
+        const followersContainer = followersContainerRef.current as any;
+        const wrappedHandleFollowersScroll = (e: any) => handleFollowersScroll(followers.length, e)
+    
+        followersContainer.addEventListener("wheel", wrappedHandleFollowersScroll)
+    
+        return () => {
+            followersContainer.removeEventListener("wheel", wrappedHandleFollowersScroll)
+        }
+    }, [followers, isLoading, user.followers])
+
+    useEffect(() => {
+        const followingContainer = followingContainerRef.current as any;
+        const wrappedHandleFollowingScroll = (e: any) => handleFollowingScroll(following.length, e)
+
+        followingContainer.addEventListener("wheel", wrappedHandleFollowingScroll)
+
+        return () => {
+            followingContainer.removeEventListener("wheel", wrappedHandleFollowingScroll)
+        }
+    }, [following, isLoading, user.following])
+
+    const handleFollowersScroll = (followersCount: number, e: any) => {
+        if (e.deltaY > 0 && !isLoading && followersCount < user.followers!)
+            getFollower()
+    }
+
+    const handleFollowingScroll = (followingCount: number, e: any) => {
+        if (e.deltaY > 0 && !isLoading && followingCount < user.following!)
+            getFollowing()
+    }
+
+    useEffect(() => {
+        if (followerImageLoaded[7]) {
+            setLoading(false)
+        }
+        if (followingImageLoaded[7]) {
+            setLoading(false)
+        }
+    }, [followerImageLoaded, followingImageLoaded])
 
     return (
         <m.div                     
@@ -133,19 +215,29 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                     className='absolute bg-gray-600 h-[0.5vh] bottom-0'>
                 </m.div>
             </div>
-            <div id='container' className='flex overflow-x-hidden hide-scrollbar w-[100%] h-[88%] relative'>
-                <div className='w-[100%] h-[100%] pb-[5vh] overflow-y-scroll hide-scrollbar'>
+            <div
+                id='container' 
+                className='flex overflow-x-hidden hide-scrollbar w-[100%] h-[88%] relative'>
+                <div id='followers' ref={followersContainerRef} className='w-[100%] h-[100%] pb-[5vh] overflow-y-scroll hide-scrollbar'>
                     {followers.map((follower, index) => (
                         <div key={index} className='flex items-center border-b px-[2vh] py-[2vh]'>
-                            <m.img
-                                src={follower.userImage}
-                                className='rounded-full w-[5vh] h-[5vh] cursor-pointer'
-                                onClick={() => redirectToUserProfile(follower)}/>
-                            <span 
-                                className='text-[2vh] font-semibold ml-[1vh] cursor-pointer'
-                                onClick={() => redirectToUserProfile(follower)}>
-                                {follower.userName}
-                            </span>
+                            <div className='flex items-center' onClick={() => redirectToUserProfile(follower)}>
+                                <m.img
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: followerImageLoaded[index] ? 1 : 0, scale: followerImageLoaded[index] ? 1 : 0 }}
+                                    src={follower.userImage}
+                                    className='rounded-full w-[5vh] h-[5vh] cursor-pointer'
+                                    onLoad={() => setFollowerImageLoaded((imageLoaded) => { 
+                                        imageLoaded[index] = true 
+                                        return [...imageLoaded]
+                                    })}/>
+                                <TypeAnimation
+                                    sequence={[follower.isDispatched ? 0 : 500, follower.userName ]}
+                                    wrapper="p"
+                                    className="text-[2vh] font-semibold ml-[1vh] cursor-pointer"
+                                    cursor={false}
+                                    speed={follower.isDispatched ? 99 : 40}/>
+                            </div>
                             <m.button
                                 initial={{ opacity: 0, scale: 0.5 }}
                                 animate={{ 
@@ -161,18 +253,31 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                         </div>
                     ))}
                     {loading && (
-                        <div id="loader" className="flex justify-center items-center w-full h-[10%] relative">
+                        <div id="loader" className="flex justify-center items-center w-full h-[10%] py-[5vh] relative">
                             <ClipLoader color="#6B7280" size={20}/>
                         </div>
                     )}
                 </div>
-                <div className='absolute w-[100%] left-[100%] h-[100%] pb-[5vh] overflow-y-scroll hide-scrollbar'>
+                <div ref={followingContainerRef} className='absolute w-[100%] left-[100%] h-[100%] pb-[5vh] overflow-y-scroll hide-scrollbar'>
                     {following.map((follower, index) => (
                         <div key={index} className='flex items-center border-b px-[2vh] py-[2vh]'>
-                            <m.img
-                                src={follower.userImage}
-                                className='rounded-full w-[5vh] h-[5vh]'/>
-                            <span className='text-[2vh] font-semibold ml-[1vh]'>{follower.userName}</span>
+                            <div className='flex items-center' onClick={() => redirectToUserProfile(follower)}>
+                                <m.img
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: followingImageLoaded[index] ? 1 : 0, scale: followingImageLoaded[index] ? 1 : 0 }}
+                                    src={follower.userImage}
+                                    className='rounded-full w-[5vh] h-[5vh] cursor-pointer'
+                                    onLoad={() => setFollowingImageLoaded((imageLoaded) => { 
+                                        imageLoaded[index] = true 
+                                        return [...imageLoaded]
+                                    })}/>
+                                <TypeAnimation
+                                    sequence={[follower.isDispatched ? 0 : 500, follower.userName ]}
+                                    wrapper="p"
+                                    className="text-[2vh] font-semibold ml-[1vh] cursor-pointer"
+                                    cursor={false}
+                                    speed={follower.isDispatched ? 99 : 40}/>
+                            </div>
                             <m.button
                                 initial={{ opacity: 0, scale: 0.5 }}
                                 animate={{ 
@@ -188,7 +293,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                         </div>
                     ))}
                     {loading && (
-                        <div id="loader" className="flex justify-center items-center w-full h-[10%] relative">
+                        <div id="loader" className="flex justify-center items-center w-full h-[10%] py-[3vh] relative">
                             <ClipLoader color="#6B7280" size={20}/>
                         </div>
                     )}

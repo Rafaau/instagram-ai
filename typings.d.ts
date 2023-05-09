@@ -14,6 +14,7 @@ export type User = {
     posts?: number
     isFollowed?: boolean
     bio?: string
+    isDispatched?: boolean
 }
 
 export type Photo = {

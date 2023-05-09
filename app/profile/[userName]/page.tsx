@@ -34,47 +34,53 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     const { state, dispatch } =  useContext(AppContext)
     const [redirectAnimation, setRedirectAnimation] = useState(false)
     const router = useRouter()
-    const user = state.users.find(user => user.userName == userName)
+    const user = state.users.find(user => user.userName == userName)!
     const [imageLoaded, setImageLoaded] = useState<boolean[]>(Array(user?.posts).fill(false) || [])
     const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null)
     const [view, setView] = useState<View>(View.PROFILE)
 
     useEffect(() => {
+        const fetchPhotos = async () => {
+            for (let i = 0; i < user?.posts!; i++) {
+                await getPhoto(i)
+            }
+        }
         if (!user) {
             router.push('/')
         } else if (user?.photos!.length == 0) {
             fetchBio().then(bio => {
                 user.bio = bio
             })
-            for (let i = 0; i < user?.posts!; i++) {
-                fetchSinglePhoto().then(async (photo) => {
-                    const likes = Math.floor(Math.random() * 5000)
-                    const newPhoto: Photo = {
-                        index: i,
-                        imageSrc: photo.src,
-                        user: { 
-                            userName: user.userName, 
-                            userImage: user.userImage,
-                            followers: user.followers,
-                            following: user.following,
-                            posts: user.posts, 
-                        },
-                        likes: likes,
-                        desc: 'no filter no filter no filter no filter no filter no filter',
-                        comments: await getComments(likes),
-                        isLiked: false,
-                        postDate: getPostDate(),
-                        isDispatched: true
-                    }
-                    user.photos!.push(newPhoto)
-                    dispatch({ type: 'SET_USERS', payload: [
-                        ...state.users,
-                        user
-                    ]})
-                })
-            }
+            fetchPhotos()
         }
     }, [state.users])
+
+    const getPhoto = async (index: number) => {
+        const photo = await fetchSinglePhoto()
+        const likes = Math.floor(Math.random() * 5000)
+        const newPhoto: Photo = {
+            index,
+            imageSrc: photo.src,
+            user: { 
+                userName: user.userName, 
+                userImage: user.userImage,
+                followers: user.followers,
+                following: user.following,
+                posts: user.posts, 
+            },
+            likes: likes,
+            desc: 'no filter no filter no filter no filter no filter no filter',
+            comments: await getComments(likes),
+            isLiked: false,
+            postDate: getPostDate(),
+            isDispatched: true
+        }
+        user.photos!.push(newPhoto)
+        dispatch({ type: 'SET_USERS', payload: [
+            ...state.users,
+            user
+        ]})
+    }
 
     const redirectToHome = () => {
         setRedirectAnimation(true)
@@ -84,12 +90,12 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     }
 
     const followOrUnfollow = () => {
-        if (user!.isFollowed) {
-            user!.isFollowed = false
-            user!.followers!--
+        if (user.photos!.length == user.posts) {
+            console.log('log')
+            dispatch({ type: 'FOLLOW_OR_UNFOLLOW', payload: user })
         } else {
-            user!.isFollowed = true
-            user!.followers!++
+            user.isFollowed = !user.isFollowed
+            user.followers = user.isFollowed ? user.followers! + 1 : user.followers! - 1
         }
     }
 
