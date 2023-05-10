@@ -6,11 +6,11 @@ export type Todo = {
 }
 
 export type User = {
-    userName: string
+    userName?: string
     userImage?: string
     photos?: Photo[]
-    followers?: number
-    following?: number
+    followers?: User[]
+    following?: User[]
     posts?: number
     isFollowed?: boolean
     bio?: string
@@ -30,10 +30,11 @@ export type Photo = {
 }
 
 export type Comment = {
-    content: string
-    user: User
+    content?: string
+    user?: User
     userImage?: string
-    postDate: string
-    likes: number,
-    isLiked: boolean
+    postDate?: string
+    likes?: number
+    isLiked?: boolean
+    isDispatched?: boolean
 }

@@ -29,26 +29,34 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
     const followingContainerRef = useRef<any>()
     const router = useRouter()
     let isLoading = false
-    let followersCount = 0
-    let followingCount = 0
 
     useEffect(() => {
+        const abortController = new AbortController()
+        const signal = abortController.signal
+    
         const container = document.getElementById('container')!
         const boxWidth = container?.offsetWidth
+    
         const fetchFollowers = async () => {
-            if (user.followers == 0 || followers.length >= 8) return
-            for (let i = 1; i < 9; i++) {
-                if (i > user.followers!) return
-                await getFollower()
+            if (user.followers!.length == 0 || followers.length >= 8) return
+            for (let i = 0; i < 8; i++) {
+                if (i < followers.length || signal.aborted) continue 
+                user.followers![i].userName
+                    ? setFollowers((followers) => [...followers, user.followers![i]])
+                    : await getFollower()
             }
         }
+    
         const fetchFollowing = async () => {
-            if (user.following == 0 || following.length >= 8) return
-            for (let i = 1; i < 9; i++) {
-                if (i > user.following!) return
-                await getFollowing()
+            if (user.following!.length == 0 || following.length >= 8) return
+            for (let i = 0; i < 8; i++) {
+                if (i < following.length || signal.aborted) continue
+                user.following![i].userName
+                    ? setFollowing((following) => [...following, user.following![i]]) 
+                    : await getFollowing()
             }
         }
+    
         if (view == View.FOLLOWERS) {
             container.scrollBy({ left: -boxWidth - 1,  behavior: 'smooth' })
             fetchFollowers()
@@ -56,24 +64,43 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
             container.scrollBy({ left: boxWidth + 1,  behavior: 'smooth' })
             fetchFollowing()
         }
+    
+        return function cleanup() {
+            abortController.abort()
+        }
     }, [view])
+    
 
     const getFollower = async () => {
-        console.log('followers')
         setLoading(true)
         isLoading = true
 
         const photo = await fetchSinglePhoto()
-        const user: User = {
+        const newUser: User = {
             userName: await fetchUsername(),
             userImage: photo.src,
             isFollowed: false,
-            followers: Math.floor(Math.random() * 2500 * 4),
-            following: Math.floor(Math.random() * 200),
+            followers: Array.from({ length: Math.floor(Math.random() * 2500 * 4) }),
+            following: Array.from({ length: Math.floor(Math.random() * 200) }),
             posts: Math.floor(Math.random() * 25 + 5), 
             photos: []
         }
-        setFollowers((followers) => [...followers, user])
+        setFollowers((followers) => [...followers, newUser])
+
+        dispatch({ type: 'SET_USERS', payload: [
+            ...state.users,
+            newUser
+        ]})
+
+        let index = user.followers!.findIndex(follower => Object.keys(follower).length == 4)
+        
+        if (index != -1)
+            user.followers![index] = newUser
+        
+        dispatch({ type: 'SET_FOLLOWERS', payload: {
+            userName: user.userName,
+            followers: user.followers!
+        }})  
 
         setTimeout(() => {
             isLoading = false
@@ -85,16 +112,32 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
         isLoading = true
 
         const photo = await fetchSinglePhoto()
-        const user: User = {
+        const newUser: User = {
             userName: await fetchUsername(),
             userImage: photo.src,
             isFollowed: false,
-            followers: Math.floor(Math.random() * 2500 * 4),
-            following: Math.floor(Math.random() * 200),
+            followers: Array.from({ length: Math.floor(Math.random() * 2500 * 4) }),
+            following: Array.from({ length: Math.floor(Math.random() * 200) }),
             posts: Math.floor(Math.random() * 25 + 5), 
             photos: []
         }
-        setFollowing((following) => [...following, user])
+        setFollowing((following) => [...following, newUser])
+
+        dispatch({ type: 'SET_USERS', payload: [
+            ...state.users,
+            newUser
+        ]})
+
+        let index = user.following!.findIndex(following => Object.keys(following).length == 4)
+        
+        if (index != -1)
+            user.following![index] = newUser
+        
+
+        dispatch({ type: 'SET_FOLLOWING', payload: {
+            userName: user.userName,
+            following: user.following!
+        }})  
 
         setTimeout(() => {
             isLoading = false
@@ -121,7 +164,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
     }
 
     useEffect(() => {
-        const followersContainer = followersContainerRef.current as any;
+        const followersContainer = followersContainerRef.current as any
         const wrappedHandleFollowersScroll = (e: any) => handleFollowersScroll(followers.length, e)
     
         followersContainer.addEventListener("wheel", wrappedHandleFollowersScroll)
@@ -132,7 +175,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
     }, [followers, isLoading, user.followers])
 
     useEffect(() => {
-        const followingContainer = followingContainerRef.current as any;
+        const followingContainer = followingContainerRef.current as any
         const wrappedHandleFollowingScroll = (e: any) => handleFollowingScroll(following.length, e)
 
         followingContainer.addEventListener("wheel", wrappedHandleFollowingScroll)
@@ -143,12 +186,12 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
     }, [following, isLoading, user.following])
 
     const handleFollowersScroll = (followersCount: number, e: any) => {
-        if (e.deltaY > 0 && !isLoading && followersCount < user.followers!)
+        if (e.deltaY > 0 && !isLoading && followersCount < user.followers!.length)
             getFollower()
     }
 
     const handleFollowingScroll = (followingCount: number, e: any) => {
-        if (e.deltaY > 0 && !isLoading && followingCount < user.following!)
+        if (e.deltaY > 0 && !isLoading && followingCount < user.following!.length)
             getFollowing()
     }
 
@@ -160,6 +203,20 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
             setLoading(false)
         }
     }, [followerImageLoaded, followingImageLoaded])
+
+    const followOrUnfollow = (user: User) => {
+        const followerToFollow = followers.find(follower => follower.userName == user.userName)
+        const followingToFollow = following.find(following => following.userName == user.userName)
+
+        if (followerToFollow) {
+            followerToFollow.isFollowed = !followerToFollow.isFollowed
+            dispatch({ type: 'FOLLOW_OR_UNFOLLOW', payload: followerToFollow })
+        }
+        if (followingToFollow) {
+            followingToFollow.isFollowed = !followingToFollow.isFollowed
+            dispatch({ type: 'FOLLOW_OR_UNFOLLOW', payload: followingToFollow })
+        }
+    }
 
     return (
         <m.div                     
@@ -191,18 +248,18 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                     animate={{ color: view === View.FOLLOWERS ? 'black' : 'gray' }}
                     onClick={() => setViewCallback(View.FOLLOWERS)}
                     className='text-[2vh] font-semibold cursor-pointer px-[1vh]'>
-                    {user.followers! < 1000
-                        ? user.followers! + ' followers'
-                        : Math.round(user.followers! / 1000) + 'K followers'
+                    {user.followers!.length < 1000
+                        ? user.followers!.length + ' followers'
+                        : Math.round(user.followers!.length / 1000) + 'K followers'
                     }
                 </m.div>
                 <m.div
                     animate={{ color: view === View.FOLLOWING ? 'black' : 'gray' }}
                     onClick={() => setViewCallback(View.FOLLOWING)}
                     className='text-[2vh] font-semibold ml-auto cursor-pointer px-[1vh]'>
-                    {user.following! < 1000
-                        ? user.following! + ' following'
-                        : Math.round(user.following! / 1000) + 'K following'
+                    {user.following!.length < 1000
+                        ? user.following!.length + ' following'
+                        : Math.round(user.following!.length / 1000) + 'K following'
                     }
                 </m.div>
                 <m.div
@@ -219,7 +276,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                 id='container' 
                 className='flex overflow-x-hidden hide-scrollbar w-[100%] h-[88%] relative'>
                 <div id='followers' ref={followersContainerRef} className='w-[100%] h-[100%] pb-[5vh] overflow-y-scroll hide-scrollbar'>
-                    {followers.map((follower, index) => (
+                    {followers.filter(x => x.userName && x.userImage).map((follower, index) => (
                         <div key={index} className='flex items-center border-b px-[2vh] py-[2vh]'>
                             <div className='flex items-center' onClick={() => redirectToUserProfile(follower)}>
                                 <m.img
@@ -232,7 +289,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                                         return [...imageLoaded]
                                     })}/>
                                 <TypeAnimation
-                                    sequence={[follower.isDispatched ? 0 : 500, follower.userName ]}
+                                    sequence={[follower.isDispatched ? 0 : 500, follower.userName! ]}
                                     wrapper="p"
                                     className="text-[2vh] font-semibold ml-[1vh] cursor-pointer"
                                     cursor={false}
@@ -241,14 +298,15 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                             <m.button
                                 initial={{ opacity: 0, scale: 0.5 }}
                                 animate={{ 
-                                    opacity: user.bio ? 1 : 0,
-                                    scale: user.bio ? 1 : 0,
-                                    backgroundColor: user?.isFollowed ? '#E5E7EB' : '#2563EB',
-                                    color: user?.isFollowed ? '#111827' : '#F3F4F6',
+                                    opacity: 1,
+                                    scale: 1,
+                                    backgroundColor: follower?.isFollowed ? '#E5E7EB' : '#2563EB',
+                                    color: follower?.isFollowed ? '#111827' : '#F3F4F6',
                                 }}
                                 transition={{ duration: 0.2, ease: 'backInOut' }}
-                                className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] ml-auto">
-                                {user?.isFollowed ? <p>Following</p> : 'Follow'}
+                                className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] ml-auto"
+                                onClick={() => followOrUnfollow(follower) }>
+                                {follower?.isFollowed ? 'Following' : 'Follow'}
                             </m.button>
                         </div>
                     ))}
@@ -259,7 +317,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                     )}
                 </div>
                 <div ref={followingContainerRef} className='absolute w-[100%] left-[100%] h-[100%] pb-[5vh] overflow-y-scroll hide-scrollbar'>
-                    {following.map((follower, index) => (
+                    {following.filter(x => x.userName && x.userImage).map((follower, index) => (
                         <div key={index} className='flex items-center border-b px-[2vh] py-[2vh]'>
                             <div className='flex items-center' onClick={() => redirectToUserProfile(follower)}>
                                 <m.img
@@ -272,7 +330,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                                         return [...imageLoaded]
                                     })}/>
                                 <TypeAnimation
-                                    sequence={[follower.isDispatched ? 0 : 500, follower.userName ]}
+                                    sequence={[follower.isDispatched ? 0 : 500, follower.userName! ]}
                                     wrapper="p"
                                     className="text-[2vh] font-semibold ml-[1vh] cursor-pointer"
                                     cursor={false}

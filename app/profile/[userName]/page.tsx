@@ -91,11 +91,10 @@ export default function UserProfile({ params: { userName } }: PageProps) {
 
     const followOrUnfollow = () => {
         if (user.photos!.length == user.posts) {
-            console.log('log')
             dispatch({ type: 'FOLLOW_OR_UNFOLLOW', payload: user })
         } else {
             user.isFollowed = !user.isFollowed
-            user.followers = user.isFollowed ? user.followers! + 1 : user.followers! - 1
+            user.isFollowed ? user.followers!.push({}) : user.followers!.pop()
         }
     }
 
@@ -158,21 +157,21 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                         </div>
                         <div className="ml-[3vh] mt-[1vh] text-center cursor-pointer" onClick={() => handleSetView(View.FOLLOWERS)}>
                             {user?.photos?.length! < 2 && <TypeAnimation
-                                sequence={[user?.photos?.length == user?.posts ? 0 : 700, user!.followers!.toString() ]}
+                                sequence={[user?.photos?.length == user?.posts ? 0 : 700, user!.followers!.length.toString() ]}
                                 wrapper="p"
                                 className="font-semibold block text-[2.5vh] h-[3.75vh]"
                                 cursor={false}
                                 speed={40}
                             />}
                             {user?.photos?.length! >= 2 && <p className="font-semibold block text-[2.5vh] h-[3.75vh]">
-                                {user!.followers!.toString()}
+                                {user!.followers!.length.toString()}
                             </p>
                             }
                             <p className="text-[2vh]">Followers</p>   
                         </div>
                         <div className="ml-[3vh] mt-[1vh] text-center cursor-pointer" onClick={() => handleSetView(View.FOLLOWING)}>
                             <TypeAnimation
-                                sequence={[user?.photos?.length! > 2 ? 0 : 900, user!.following!.toString() ]}
+                                sequence={[user?.photos?.length! > 2 ? 0 : 900, user!.following!.length.toString() ]}
                                 wrapper="p"
                                 className="font-semibold block text-[2.5vh] h-[3.75vh]"
                                 cursor={false}

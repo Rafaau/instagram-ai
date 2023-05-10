@@ -1,6 +1,6 @@
 'use client'
 
-import { Photo, User } from "@component/typings";
+import { Comment, Photo, User } from "@component/typings";
 import { fetchData } from "@component/utils/fetchData";
 import { useContext, useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,7 +12,7 @@ import { motion as m } from 'framer-motion'
 import { TextAnimation } from "@component/styles/textAnimation";
 import { useRouter } from "next/navigation";
 import { AppContext } from "@component/contexts/appContext";
-import { fetchSinglePhoto, fetchUsername, getComments, getPostDate } from "@component/utils/providers";
+import { fetchComment, fetchDesc, fetchSinglePhoto, fetchUsername, getComments, getPostDate } from "@component/utils/providers";
 
 const enum View {
     PHOTOS,
@@ -32,6 +32,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     const containerRef = useRef<any>()
     const [loading, setLoading] = useState<boolean>(false)
     const [imageLoaded, setImageLoaded] = useState<boolean[]>([])
+    const [commentLoaded, setCommentLoaded] = useState<boolean[]>([])
     const [view, setView] = useState<View>(View.PHOTOS)
     const [currentPhoto, setCurrentPhoto] = useState<Photo>()
     const [inputValue, setInputValue] = useState<string>('')
@@ -57,6 +58,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
             fetchUsername().then(async (username) => {
                 const likes = Math.floor(Math.random() * 5000) 
                 const comments = await getComments(likes)
+                const desc = await fetchDesc()
                 isRunOut = photo.isRunOut
                 setPhotos((prevPhotos) => {
                     const newPhoto: Photo = {
@@ -65,13 +67,23 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         user: { 
                             userName: username, 
                             userImage: photo.src,
-                            followers: Math.floor(Math.random() * likes * 4),
-                            following: Math.floor(Math.random() * 200),
+                            followers: Array.from({ length: Math.floor(Math.random() * likes * 4) }, () => ({
+                                userName: undefined,
+                                userImage: undefined,
+                                isFollowed: false,
+                                isDispatched: false,
+                            })),
+                            following: Array.from({ length: Math.floor(Math.random() * 200) }, () => ({
+                                userName: undefined,
+                                userImage: undefined,
+                                isFollowed: false,
+                                isDispatched: false,
+                            })),
                             posts: Math.floor(Math.random() * 25 + 5), 
                             photos: []
                         },
                         likes: likes,
-                        desc: 'no filter no filter no filter no filter no filter no filter',
+                        desc,
                         comments: comments,
                         isLiked: false,
                         postDate: getPostDate(),
@@ -169,10 +181,24 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     useEffect(() => {
         const container = document.getElementById('container')!
         const boxWidth = container?.offsetWidth
-        if (view == View.COMMENTS)
+        const getComment = async (index: number) => {
+            const comment = await fetchComment()
+            setPhotos((prevPhotos) => {
+                prevPhotos[prevPhotos.findIndex(p => p.likes == currentPhoto!.likes)].comments[index] = comment[0]
+ 
+                return [...prevPhotos]
+            })
+        }
+        if (view == View.COMMENTS) {
             container.scrollBy({ left: boxWidth + 1,  behavior: 'smooth' })
-        else
+            for (let i = currentPhoto?.comments.filter(x => x.content).length!; i < currentPhoto!.comments.length; i++) {
+                setCommentLoaded([])
+                getComment(i)
+            }
+        }
+        else {
             container.scrollBy({ left: -boxWidth - 1, behavior: 'smooth' })
+        }
     }, [view])
 
     const handleViewComments = (photo: Photo) => {
@@ -216,6 +242,10 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
         }, 100)
     }
 
+    const handleOnCommentLoad = (comment: Comment) => {
+        setCommentLoaded((prev) => [...prev, true])
+    }
+
     const redirectToUserProfile = (user: User) => {
         setRedirectAnimation(true)
         if (fetchedPhotos) {
@@ -238,7 +268,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
         <div id="container" className="flex h-[100%] relative overflow-x-hidden hide-scrollbar">
             <m.div 
                 initial={{ x: '100%' }}
-                animate={{ x: redirectAnimation ? '100%' : '0%' }}
+                animate={{ x: redirectAnimation ? view == View.PHOTOS ? '100%' : '200%' : '0%' }}
                 transition={{ ease: 'backInOut', duration: 0.3 }}
                 ref={containerRef} 
                 className="h-[100%] w-[100%] absolute left-0 top-0 overflow-y-hidden hide-scrollbar">
@@ -350,7 +380,11 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                     </div>
                 )}
             </m.div>
-            {currentPhoto && <div className="w-[101%] h-[100%] absolute left-[100%] overflow-hidden">
+            {currentPhoto && 
+            <m.div 
+                animate={{ x: redirectAnimation ? '100%' : '0%' }}
+                transition={{ ease: 'backInOut', duration: 0.3 }}
+                className="w-[101%] h-[100%] absolute left-[100%] overflow-hidden">
                 <div className="relative h-[100%]">
                     <div id="comments-top" className="flex mx-[1vh] mt-[1.5vh] items-center top-0">
                         <FontAwesomeIcon icon={left} className="px-[1.5vh] text-[4vh] cursor-pointer hover:text-gray-600 animate-ping-once" onClick={() => setView(View.PHOTOS)} />
@@ -368,14 +402,32 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         </div>
                     </div>
                     <div id="comments-container" className="overflow-y-scroll hide-scrollbar h-full pb-[25vh]">
-                        {currentPhoto?.comments?.map((comment: any) => (
+                        {currentPhoto?.comments?.filter(x => x.content).map((comment: any, index) => (
                             <div key={comment.user.userName} className="flex p-[1.5vh]">
                                 <div>
-                                    <img src={comment?.userImage} className="w-[8vh] rounded-full p-[0.4vh] bg-gray-100" />
+                                    <m.img
+                                        initial={{ scale: 0.3, opacity: 0 }}
+                                        animate={{ scale: commentLoaded[index] ? 1 : 0, opacity: commentLoaded[index] ? 1 : 0 }}
+                                        src={comment?.userImage} 
+                                        className="w-[6.5vh] rounded-full p-[0.4vh] bg-gray-100 cursor-pointer"
+                                        onClick={() => redirectToUserProfile(comment.user)} 
+                                        onLoad={() => handleOnCommentLoad(comment)}/>
                                 </div>
                                 <div className="ml-[2vh]">
-                                    <p className="font-bold text-[2vh]">{comment?.user.userName}</p>
-                                    <p className="text-[2vh] leading-[2.5vh]">{comment?.content}</p>
+                                    <div onClick={() => redirectToUserProfile(comment.user)}>
+                                        <TypeAnimation
+                                            sequence={[commentLoaded[index] ? 0 : 500, comment?.user.userName ]}
+                                            wrapper="p"
+                                            className="font-bold text-[2vh] cursor-pointer"
+                                            cursor={false}
+                                            speed={commentLoaded[index] ? 99 : 60} />
+                                    </div>
+                                    <TypeAnimation
+                                        sequence={[commentLoaded[index] ? 0 : 1000, comment?.content ]}
+                                        wrapper="p"
+                                        className="text-[2vh] leading-[2.5vh]"
+                                        cursor={false}
+                                        speed={commentLoaded[index] ? 99 : 60} />
                                 </div>
                             </div>    
                         ))}
@@ -396,7 +448,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         </span>
                     </div>
                 </div>
-            </div>}
+            </m.div>}
         </div>
     )
 }

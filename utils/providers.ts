@@ -9,18 +9,36 @@ export async function fetchUsername() {
 
 export async function fetchComment(reps: number = 1) {
     let comments: Comment[] = []
-    for (let i = 0; i < reps; i++) {
-        const res = await fetchData('randomComment') as any
-        const userName = await fetchUsername()
-        //const userImage = await fetchSinglePhoto()
-        comments.push({
-            content: res.content,
-            user: { userName: userName },
-            postDate: getPostDate(),
-            isLiked: false,
-            likes: Math.floor(Math.random() * 1),
-            //userImage: userImage.src
-        })
+    const res = await fetchData('randomComment') as any
+    const userName = await fetchUsername()
+    const userImage = await fetchSinglePhoto()
+    comments.push({
+        content: res.content,
+        user: { 
+            userName, 
+            userImage: userImage.src,
+            followers: Array.from({ length: Math.floor(Math.random() * 10000) }, () => ({
+                userName: undefined,
+                userImage: undefined,
+                isFollowed: false,
+                isDispatched: false,
+            })),
+            following: Array.from({ length: Math.floor(Math.random() * 200) }, () => ({
+                userName: undefined,
+                userImage: undefined,
+                isFollowed: false,
+                isDispatched: false,
+            })),
+            posts: Math.floor(Math.random() * 25 + 5), 
+            photos: []
+        },
+        postDate: getPostDate(),
+        isLiked: false,
+        likes: Math.floor(Math.random() * 1),
+        userImage: userImage.src
+    })
+    for (let i = 0; i < reps - 1; i++) {
+        comments.push({})
     }
     return comments
 }
@@ -28,6 +46,11 @@ export async function fetchComment(reps: number = 1) {
 export async function fetchBio() {
     const response = await fetchData('randomBio')
     return response.bio
+}
+
+export async function fetchDesc() {
+    const response = await fetchData('randomDesc')
+    return response.desc
 }
 
 export function getPostDate() {

@@ -7,7 +7,7 @@ export type AppState = {
 }
 
 type AppAction = {
-    type: 'SET_PHOTOS' | 'LIKE_OR_UNLIKE' | 'ADD_COMMENT' | 'SET_USERS' | 'FOLLOW_OR_UNFOLLOW'
+    type: 'SET_PHOTOS' | 'LIKE_OR_UNLIKE' | 'ADD_COMMENT' | 'SET_USERS' | 'FOLLOW_OR_UNFOLLOW' | 'SET_FOLLOWERS' | 'SET_FOLLOWING'
     payload: any
 }
 
@@ -79,6 +79,7 @@ const appReducer = (state: AppState, action: AppAction) => {
                 })
             }
         case 'SET_USERS':
+            console.log(action.payload)
             return {
                 ...state,
                 users: action.payload
@@ -87,16 +88,52 @@ const appReducer = (state: AppState, action: AppAction) => {
             return {
                 ...state,
                 users: state.users.map(user => {
+                    console.log(action.payload.userName)
+                    console.log(state.users)
                     if (user.userName == action.payload.userName) {
+                        console.log('log')
+                        const newFollowers = [...user!. followers!]
+        
+                        if (user.isFollowed)
+                            newFollowers.pop()
+                        else
+                            newFollowers.push({})
+        
                         return {
                             ...user,
                             isFollowed: !user.isFollowed,
-                            followers: user.followers! + (user.isFollowed ? -1 : 1)
+                            followers: newFollowers
                         }
                     }
                     return user
                 })
-            }
+            }      
+        case 'SET_FOLLOWERS':
+            return {
+                ...state,
+                users: state.users.map(user => {
+                    if (user.userName == action.payload.userName) {
+                        return {
+                            ...user,
+                            followers: action.payload.followers
+                        }
+                    }
+                    return user
+                })
+            }            
+        case 'SET_FOLLOWING':
+            return {
+                ...state,
+                users: state.users.map(user => {
+                    if (user.userName == action.payload.userName) {
+                        return {
+                            ...user,
+                            following: action.payload.following
+                        }
+                    }
+                    return user
+                })
+            }    
         default:
             return state
     }
