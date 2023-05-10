@@ -339,14 +339,15 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
                             <m.button
                                 initial={{ opacity: 0, scale: 0.5 }}
                                 animate={{ 
-                                    opacity: user.bio ? 1 : 0,
-                                    scale: user.bio ? 1 : 0,
-                                    backgroundColor: user?.isFollowed ? '#E5E7EB' : '#2563EB',
-                                    color: user?.isFollowed ? '#111827' : '#F3F4F6',
+                                    opacity: 1,
+                                    scale: 1,
+                                    backgroundColor: follower?.isFollowed ? '#E5E7EB' : '#2563EB',
+                                    color: follower?.isFollowed ? '#111827' : '#F3F4F6',
                                 }}
                                 transition={{ duration: 0.2, ease: 'backInOut' }}
-                                className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] ml-auto">
-                                {user?.isFollowed ? <p>Following</p> : 'Follow'}
+                                className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] ml-auto"
+                                onClick={() => followOrUnfollow(follower) }>
+                                {follower?.isFollowed ? 'Following' : 'Follow'}
                             </m.button>
                         </div>
                     ))}
