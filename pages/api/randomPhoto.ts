@@ -23,6 +23,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
     const usedIndexes = JSON.parse(req.query.usedIndexes as string || '[]')
+    const prompt = req.query.prompt as string
     const authClient = await authorizeServiceAccount()
     const drive = google.drive({ version: 'v3', auth: authClient })
 
@@ -44,7 +45,7 @@ export default async function handler(
 
     try {
         const result = await drive.files.list({
-            q: "mimeType='image/jpeg' or mimeType='image/png'",
+            q: `name contains '${prompt}_'`,
             fields: 'nextPageToken, files(id, name, webContentLink)',
             supportsAllDrives: true,
             includeItemsFromAllDrives: true,
@@ -54,13 +55,15 @@ export default async function handler(
 
         if (files?.length) {
             files.sort((a, b) => a.name!.localeCompare(b.name!))
-            // let randomFileIndex
-            // do {
-            //     randomFileIndex = Math.floor(Math.random() * files.length)
-            // } while (usedIndexes.includes(randomFileIndex))
+            let randomFileIndex
+            do {
+                randomFileIndex = Math.floor(Math.random() * files.length)
+            } while (usedIndexes.includes(randomFileIndex))
 
-            const randomFileIndex = Math.floor(Math.random() * files.length)
+            //const randomFileIndex = Math.floor(Math.random() * files.length)
             const randomFile = files[randomFileIndex]
+
+            console.log(prompt, usedIndexes)
 
             await makeFilePublic(randomFile.id as string)
             usedIndexes.push(randomFileIndex)

@@ -5,11 +5,12 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { motion as m } from 'framer-motion'
 import { View } from './[userName]/page'
 import { ClipLoader } from 'react-spinners'
-import { fetchSinglePhoto, fetchUsername } from '@component/utils/providers'
+import { fetchSinglePhoto, fetchFemaleUsername, fetchMaleUsername } from '@component/utils/providers'
 import { AppContext } from '@component/contexts/appContext'
 import { useRouter } from 'next/navigation'
 import { TypeAnimation } from 'react-type-animation'
 import { get } from 'http'
+import { Prompts } from '@component/lib/prompts'
 
 interface PageProps {
     user: User,
@@ -75,15 +76,20 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
         setLoading(true)
         isLoading = true
 
-        const photo = await fetchSinglePhoto()
+        const random = Math.floor(Math.random() * 9)
+        const prompt = Prompts[random]
+        const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
+
+        const photo = await fetchSinglePhoto(prompt.prompt!)
         const newUser: User = {
-            userName: await fetchUsername(),
+            userName,
             userImage: photo.src,
             isFollowed: false,
             followers: Array.from({ length: Math.floor(Math.random() * 2500 * 4) }),
             following: Array.from({ length: Math.floor(Math.random() * 200) }),
             posts: Math.floor(Math.random() * 25 + 5), 
-            photos: []
+            photos: [],
+            prompt
         }
         setFollowers((followers) => [...followers, newUser])
 
@@ -102,6 +108,8 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
             followers: user.followers!
         }})  
 
+        localStorage.setItem(`${prompt.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))         
+
         setTimeout(() => {
             isLoading = false
         }, 2000)
@@ -111,15 +119,20 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
         setLoading(true)
         isLoading = true
 
-        const photo = await fetchSinglePhoto()
+        const random = Math.floor(Math.random() * 9)
+        const prompt = Prompts[random]
+        const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
+
+        const photo = await fetchSinglePhoto(prompt.prompt!)
         const newUser: User = {
-            userName: await fetchUsername(),
+            userName,
             userImage: photo.src,
             isFollowed: false,
             followers: Array.from({ length: Math.floor(Math.random() * 2500 * 4) }),
             following: Array.from({ length: Math.floor(Math.random() * 200) }),
             posts: Math.floor(Math.random() * 25 + 5), 
-            photos: []
+            photos: [],
+            prompt
         }
         setFollowing((following) => [...following, newUser])
 
@@ -138,6 +151,8 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
             userName: user.userName,
             following: user.following!
         }})  
+
+        localStorage.setItem(`${prompt.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))         
 
         setTimeout(() => {
             isLoading = false

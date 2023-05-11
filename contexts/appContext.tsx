@@ -87,10 +87,7 @@ const appReducer = (state: AppState, action: AppAction) => {
             return {
                 ...state,
                 users: state.users.map(user => {
-                    console.log(action.payload.userName)
-                    console.log(state.users)
                     if (user.userName == action.payload.userName) {
-                        console.log('log')
                         const newFollowers = [...user!. followers!]
         
                         if (user.isFollowed)

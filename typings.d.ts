@@ -1,9 +1,4 @@
-export type Todo = {
-    userId: number
-    id: number
-    title: string
-    completed: boolean
-}
+import { Prompt } from "./lib/prompts"
 
 export type User = {
     userName?: string
@@ -15,6 +10,7 @@ export type User = {
     isFollowed?: boolean
     bio?: string
     isDispatched?: boolean
+    prompt?: { prompt: string, gender: string }
 }
 
 export type Photo = {

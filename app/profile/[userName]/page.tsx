@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRight as right, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { fetchData } from "@component/utils/fetchData"
 import { Photo } from "@component/typings"
-import { fetchBio, getComments, getPostDate } from "@component/utils/providers"
+import { fetchBio, fetchSinglePhoto, getComments, getPostDate } from "@component/utils/providers"
 import { AppContext } from "@component/contexts/appContext"
 import PhotosList from "@component/app/PhotosList"
 import { TypeAnimation } from "react-type-animation"
@@ -25,16 +25,12 @@ export const enum View {
     FOLLOWING
 }
 
-async function fetchSinglePhoto() {
-    const usedIndexes = JSON.parse(localStorage.getItem('usedIndexes') || '[]')
-    return fetchData(`randomPhoto?usedIndexes=${JSON.stringify(usedIndexes)}`)
-}
-
 export default function UserProfile({ params: { userName } }: PageProps) {
     const { state, dispatch } =  useContext(AppContext)
     const [redirectAnimation, setRedirectAnimation] = useState(false)
     const router = useRouter()
     const user = state.users.find(user => user.userName == userName)!
+    const [avatarLoaded, setAvatarLoaded] = useState(false)
     const [imageLoaded, setImageLoaded] = useState<boolean[]>(Array(user?.posts).fill(false) || [])
     const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null)
     const [view, setView] = useState<View>(View.PROFILE)
@@ -50,7 +46,6 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     useEffect(() => {
         const fetchPhotos = async () => {
             setIsLoading(true)
-            console.log(user.photos!.length, user.posts!)
             for (let i = user?.photos!.length; i < user?.posts!; i++) {
                 if (!isMounted.current) return
                 await getPhoto(i)
@@ -68,7 +63,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     }, [state.users, isLoading])
 
     const getPhoto = async (index: number) => {
-        const photo = await fetchSinglePhoto()
+        const photo = await fetchSinglePhoto(user.prompt!.prompt!)
         const likes = Math.floor(Math.random() * 5000)
         const newPhoto: Photo = {
             index,
@@ -79,19 +74,24 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                 followers: user.followers,
                 following: user.following,
                 posts: user.posts, 
+                prompt: user.prompt!
             },
             likes: likes,
             desc: 'no filter no filter no filter no filter no filter no filter',
             comments: await getComments(likes),
             isLiked: false,
             postDate: getPostDate(),
-            isDispatched: true
+            isDispatched: true,
         }
+
         user.photos!.push(newPhoto)
+
         dispatch({ type: 'SET_USERS', payload: [
             ...state.users,
             user
         ]})
+
+        localStorage.setItem(`${user.prompt?.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))         
     }
 
     const redirectToHome = () => {
@@ -153,9 +153,16 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                     </div>
                     <div className="flex items-center p-[1.5vh] border-b h-[15%]">
                         <div>
-                            <div className="bg-border-gradient rounded-full p-[0.5vh] border">
-                                <img src={user?.userImage} className="w-[9vh] rounded-full p-[0.4vh] bg-gray-100" />
-                            </div>
+                            <m.div
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: avatarLoaded ? 1 : 0, scale: avatarLoaded ? 1 : 0 }}
+                                transition={{ duration: 0.2, ease: 'backInOut' }} 
+                                className="bg-border-gradient rounded-full p-[0.5vh] border">
+                                <img 
+                                    onLoad={() => setAvatarLoaded(true)}
+                                    src={user?.userImage} 
+                                    className="w-[9vh] rounded-full p-[0.4vh] bg-gray-100" />
+                            </m.div>
                         </div>
                         <div className="ml-[2vh] mt-[1vh] text-center">
                             <TypeAnimation
@@ -241,7 +248,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
             {currentPhoto &&
                 <PhotosList 
                     fetchedPhotos={sortPhotos(user!.photos!)} 
-                    onBackToProfile={() => setCurrentPhoto(null)}
+                    onBackToProfile={() => { setCurrentPhoto(null); setAvatarLoaded(false); } }
                     photoIndex={currentPhoto.index} 
                     photoLiked={(photo: Photo) => likeOrUnlikePhoto(photo)}/>
             }

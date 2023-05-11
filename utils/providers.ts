@@ -1,17 +1,26 @@
+import { Prompts } from "@component/lib/prompts"
 import { fetchData } from "./fetchData"
 import { Comment } from "@component/typings"
 
-export async function fetchUsername() {
+export async function fetchFemaleUsername() {
     const response = await fetch('https://names.drycodes.com/1?nameOptions=girl_names&case=lower')
     const data = await response.json()
     return data[0]
 }
 
+export async function fetchMaleUsername() {
+    const response = await fetch('https://names.drycodes.com/1?nameOptions=boy_names&case=lower')
+    const data = await response.json()
+    return data[0]
+}
+
 export async function fetchComment(reps: number = 1) {
+    let random = Math.floor(Math.random() * 9)
+    const prompt = Prompts[random]
     let comments: Comment[] = []
     const res = await fetchData('randomComment') as any
-    const userName = await fetchUsername()
-    const userImage = await fetchSinglePhoto()
+    const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
+    const userImage = await fetchSinglePhoto(prompt.prompt!)
     comments.push({
         content: res.content,
         user: { 
@@ -30,7 +39,8 @@ export async function fetchComment(reps: number = 1) {
                 isDispatched: false,
             })),
             posts: Math.floor(Math.random() * 25 + 5), 
-            photos: []
+            photos: [],
+            prompt: prompt,
         },
         postDate: getPostDate(),
         isLiked: false,
@@ -40,6 +50,9 @@ export async function fetchComment(reps: number = 1) {
     for (let i = 0; i < reps - 1; i++) {
         comments.push({})
     }
+
+    localStorage.setItem(`${prompt.prompt}_usedIndexes`, JSON.stringify(userImage.usedIndexes))         
+
     return comments
 }
 
@@ -102,7 +115,7 @@ export async function getComments(likes: number) {
     return comments
 }
 
-export async function fetchSinglePhoto() {
-    const usedIndexes = JSON.parse(localStorage.getItem('usedIndexes') || '[]')
-    return fetchData(`randomPhoto?usedIndexes=${JSON.stringify(usedIndexes)}`)
+export async function fetchSinglePhoto(prompt: string) {
+    const usedIndexes = JSON.parse(localStorage.getItem(`${prompt}_usedIndexes`) || '[]')
+    return fetchData(`randomPhoto?prompt=${prompt}&usedIndexes=${JSON.stringify(usedIndexes)}`)
 }

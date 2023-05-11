@@ -1,7 +1,6 @@
 'use client'
 
 import { Comment, Photo, User } from "@component/typings";
-import { fetchData } from "@component/utils/fetchData";
 import { useContext, useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart as unliked, faComment as comment } from '@fortawesome/free-regular-svg-icons'
@@ -12,7 +11,8 @@ import { motion as m } from 'framer-motion'
 import { TextAnimation } from "@component/styles/textAnimation";
 import { useRouter } from "next/navigation";
 import { AppContext } from "@component/contexts/appContext";
-import { fetchComment, fetchDesc, fetchSinglePhoto, fetchUsername, getComments, getPostDate } from "@component/utils/providers";
+import { fetchComment, fetchDesc, fetchSinglePhoto, fetchFemaleUsername, getComments, getPostDate, fetchMaleUsername } from "@component/utils/providers";
+import { Prompts } from "@component/lib/prompts";
 
 const enum View {
     PHOTOS,
@@ -49,52 +49,52 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
         if (isLoading || isRunOut || fetchedPhotos) return
         setLoading(true)
         isLoading = true
-        setTimeout(() => {
-            const loader = document.getElementById('loader')
-            loader?.scrollIntoView({ behavior: 'smooth' })
-            if (photosLength != 0) currentIndex++
-        }, 100)
-        fetchSinglePhoto().then((photo) => {
-            fetchUsername().then(async (username) => {
-                const likes = Math.floor(Math.random() * 5000) 
-                const comments = await getComments(likes)
-                const desc = await fetchDesc()
-                isRunOut = photo.isRunOut
-                setPhotos((prevPhotos) => {
-                    const newPhoto: Photo = {
-                        index: prevPhotos.length,
-                        imageSrc: photo.src,
-                        user: { 
-                            userName: username, 
-                            userImage: photo.src,
-                            followers: Array.from({ length: Math.floor(Math.random() * likes * 4) }, () => ({
-                                userName: undefined,
-                                userImage: undefined,
-                                isFollowed: false,
-                                isDispatched: false,
-                            })),
-                            following: Array.from({ length: Math.floor(Math.random() * 200) }, () => ({
-                                userName: undefined,
-                                userImage: undefined,
-                                isFollowed: false,
-                                isDispatched: false,
-                            })),
-                            posts: Math.floor(Math.random() * 25 + 5), 
-                            photos: []
-                        },
-                        likes: likes,
-                        desc,
-                        comments: comments,
-                        isLiked: false,
-                        postDate: getPostDate(),
-                        isDispatched: false
-                    }
-                    photosLength = prevPhotos.length + 1
-                    return [...prevPhotos, newPhoto]
-                })
+        if (photosLength != 0) currentIndex++
 
-                localStorage.setItem("usedIndexes", JSON.stringify(photo.usedIndexes))
+        const random = Math.floor(Math.random() * 9)
+        const prompt = Prompts[random]
+        const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
+
+        fetchSinglePhoto(prompt.prompt!).then(async (photo) => {
+            const likes = Math.floor(Math.random() * 5000) 
+            const comments = await getComments(likes)
+            const desc = await fetchDesc()
+            isRunOut = photo.isRunOut
+            setPhotos((prevPhotos) => {
+                const newPhoto: Photo = {
+                    index: prevPhotos.length,
+                    imageSrc: photo.src,
+                    user: { 
+                        userName,
+                        userImage: photo.src,
+                        followers: Array.from({ length: Math.floor(Math.random() * likes * 4) }, () => ({
+                            userName: undefined,
+                            userImage: undefined,
+                            isFollowed: false,
+                            isDispatched: false,
+                        })),
+                        following: Array.from({ length: Math.floor(Math.random() * 200) }, () => ({
+                            userName: undefined,
+                            userImage: undefined,
+                            isFollowed: false,
+                            isDispatched: false,
+                        })),
+                        posts: Math.floor(Math.random() * 25 + 5), 
+                        photos: [],
+                        prompt,
+                    },
+                    likes: likes,
+                    desc,
+                    comments: comments,
+                    isLiked: false,
+                    postDate: getPostDate(),
+                    isDispatched: false
+                }
+                photosLength = prevPhotos.length + 1
+                return [...prevPhotos, newPhoto]
             })
+
+            localStorage.setItem(`${prompt.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))           
         })
 
         setTimeout(() => {
@@ -108,6 +108,11 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     }, [photos])
 
     useEffect(() => {
+        const loader = document.getElementById('loader')
+        loader?.scrollIntoView({ behavior: 'smooth' })
+    }, [loading])
+
+    useEffect(() => {
         if (fetchedPhotos) {
             setPhotos(fetchedPhotos)
             photosLength = fetchedPhotos.length
@@ -118,7 +123,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
             return
         }
         if (state.photos.length === 0) {
-            localStorage.removeItem('usedIndexes')
+            localStorage.clear()
             fetchPhoto()
         } else {
             setPhotos(state.photos)
@@ -280,7 +285,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                                 animate={{ x: imageLoaded[photo.index] ? 0 : "-100%", opacity: imageLoaded[photo.index] ? 1 : 0 }}
                                 className="bg-border-gradient rounded-full p-[0.5vh] border">
                                 <img 
-                                    src={photo.imageSrc} 
+                                    src={photo.user.userImage} 
                                     onLoad={() => handleImageLoad(photo.index)}
                                     className="w-[5vh] rounded-full p-[0.4vh] bg-gray-100" />
                             </m.div>
