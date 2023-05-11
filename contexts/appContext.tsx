@@ -79,7 +79,6 @@ const appReducer = (state: AppState, action: AppAction) => {
                 })
             }
         case 'SET_USERS':
-            console.log(action.payload)
             return {
                 ...state,
                 users: action.payload

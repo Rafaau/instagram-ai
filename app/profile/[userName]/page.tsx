@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from "next/navigation"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { motion as m } from 'framer-motion'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRight as right, faChevronDown } from '@fortawesome/free-solid-svg-icons'
@@ -38,22 +38,34 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     const [imageLoaded, setImageLoaded] = useState<boolean[]>(Array(user?.posts).fill(false) || [])
     const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null)
     const [view, setView] = useState<View>(View.PROFILE)
+    const [isLoading, setIsLoading] = useState(false)
+    const isMounted = useRef(true)
+
+    useEffect(() => {
+        return () => {
+            isMounted.current = false
+        }
+    }, [])
 
     useEffect(() => {
         const fetchPhotos = async () => {
-            for (let i = 0; i < user?.posts!; i++) {
+            setIsLoading(true)
+            console.log(user.photos!.length, user.posts!)
+            for (let i = user?.photos!.length; i < user?.posts!; i++) {
+                if (!isMounted.current) return
                 await getPhoto(i)
             }
+            setIsLoading(false)
         }
         if (!user) {
             router.push('/')
-        } else if (user?.photos!.length == 0) {
+        } else if (user?.photos!.length < user?.posts! && !isLoading) {
             fetchBio().then(bio => {
                 user.bio = bio
             })
             fetchPhotos()
         }
-    }, [state.users])
+    }, [state.users, isLoading])
 
     const getPhoto = async (index: number) => {
         const photo = await fetchSinglePhoto()
