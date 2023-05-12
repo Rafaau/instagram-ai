@@ -1,38 +1,38 @@
 export const Prompts = [
     {
-        prompt: 'asian_girl',
+        prompt: "name contains 'asian_girl_' and not name contains 'asian_girlglasses'",
         gender: 'female',
     },
     {
-        prompt: 'asian_girlglasses',
+        prompt: "name contains 'asian_girlglasses_'",
         gender: 'female',
     },
     {
-        prompt: 'asian_man',
+        prompt: "name contains 'asian_man_'",
         gender: 'male',
     },
     {
-        prompt: 'black_girl',
+        prompt: "name contains 'black_girl_' and not name contains 'black_girlglasses'",
         gender: 'female',
     },
     {
-        prompt: 'black_girlglasses',
+        prompt: "name contains 'black_girlglasses_'",
         gender: 'female'
     },
     {
-        prompt: 'black_man',
+        prompt: "name contains 'black_man_'",
         gender: 'male',
     },
     {
-        prompt: 'european_girl',
+        prompt: "name contains 'european_girl_' and not name contains 'european_girlglasses'",
         gender: 'female',
     },
     {
-        prompt: 'european_girlglasses',
+        prompt: "name contains 'european_girlglasses_'",
         gender: 'female',
     },
     {
-        prompt: 'european_man',
+        prompt: "name contains 'european_man_'",
         gender: 'male'
     }
 ]

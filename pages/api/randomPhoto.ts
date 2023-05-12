@@ -45,12 +45,14 @@ export default async function handler(
 
     try {
         const result = await drive.files.list({
-            q: `name contains '${prompt}_'`,
+            //q: `name contains 'black_girl_' and not name contains 'black_girlglasses'`,
+            q: prompt,
             fields: 'nextPageToken, files(id, name, webContentLink)',
             supportsAllDrives: true,
             includeItemsFromAllDrives: true,
-
+            pageSize: 1000,
         })
+
         const files = result.data.files
 
         if (files?.length) {
@@ -62,8 +64,6 @@ export default async function handler(
 
             //const randomFileIndex = Math.floor(Math.random() * files.length)
             const randomFile = files[randomFileIndex]
-
-            console.log(prompt, usedIndexes)
 
             await makeFilePublic(randomFile.id as string)
             usedIndexes.push(randomFileIndex)

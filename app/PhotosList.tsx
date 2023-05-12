@@ -60,6 +60,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
             const comments = await getComments(likes)
             const desc = await fetchDesc()
             isRunOut = photo.isRunOut
+            setImageLoaded((prev) => [...prev, false])
             setPhotos((prevPhotos) => {
                 const newPhoto: Photo = {
                     index: prevPhotos.length,
@@ -179,7 +180,8 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     const handleImageLoad = (index: number) => {
         setImageLoaded((prev) => {
             setLoading(false)
-            return [...prev, true]
+            prev[index] = true
+            return [...prev]
         })
     }
 
@@ -265,6 +267,9 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                 user
             ]})
         setTimeout(() => {
+            setImageLoaded((prev) => {
+                return prev.map((p) => false)
+            })
             router.push(`/profile/${user.userName}`)
         }, 300)
     }
