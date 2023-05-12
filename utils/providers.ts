@@ -1,4 +1,4 @@
-import { Prompts } from "@component/lib/prompts"
+import { PhotoPrompts } from "@component/lib/prompts"
 import { fetchData } from "./fetchData"
 import { Comment } from "@component/typings"
 
@@ -14,11 +14,12 @@ export async function fetchMaleUsername() {
     return data[0]
 }
 
-export async function fetchComment(reps: number = 1) {
+export async function fetchComment(reps: number = 1, gender: string) {
+    if (gender == 'none') return [] // TODO
     let random = Math.floor(Math.random() * 9)
-    const prompt = Prompts[random]
+    const prompt = PhotoPrompts[random]
     let comments: Comment[] = []
-    const res = await fetchData('randomComment') as any
+    const res = await fetchData(`randomComment?gender=${gender}`) as any
     const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
     const userImage = await fetchSinglePhoto(prompt.prompt!)
     comments.push({
@@ -56,13 +57,14 @@ export async function fetchComment(reps: number = 1) {
     return comments
 }
 
-export async function fetchBio() {
-    const response = await fetchData('randomBio')
+export async function fetchBio(gender: string) {
+    const response = await fetchData(`randomBio?gender=${gender}`)
     return response.bio
 }
 
-export async function fetchDesc() {
-    const response = await fetchData('randomDesc')
+export async function fetchDesc(gender: string) {
+    if (gender == 'none') return '' // TODO
+    const response = await fetchData(`randomDesc?gender=${gender}`)
     return response.desc
 }
 
@@ -89,7 +91,7 @@ export function getPostDate() {
     return postDate
 }
 
-export async function getComments(likes: number) {
+export async function getComments(likes: number, gender: string) {
     let comments: Comment[] = []
     let random
     switch(true) {
@@ -98,15 +100,15 @@ export async function getComments(likes: number) {
             break
         case (likes > 100 && likes < 1000):
             random = Math.floor(Math.random() * 3)
-            comments = await fetchComment(random)
+            comments = await fetchComment(random, gender)
             break
         case (likes > 1000 && likes < 3000):
             random = Math.floor(Math.random() * 6)
-            comments = await fetchComment(random)
+            comments = await fetchComment(random, gender)
             break
         case (likes > 3000 && likes <= 5000):
             random = Math.floor(Math.random() * 9)
-            comments = await fetchComment(random)
+            comments = await fetchComment(random, gender)
             break
         default:
             comments = []

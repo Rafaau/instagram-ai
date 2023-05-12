@@ -1,4 +1,5 @@
 import { motion as m } from 'framer-motion'
+import { useEffect, useState } from 'react'
 
 export function TextAnimation (props: { text: string, delay?: number, className?: string }) {
     const letters = Array.from(props.text)
@@ -39,4 +40,40 @@ export function TextAnimation (props: { text: string, delay?: number, className?
             ))}
         </m.p>
     )
+}
+
+
+export function TypeAnimationCustom({text, speed, delay, className, onLoad}: any) {
+  const [displayedText, setDisplayedText] = useState('')
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [startTyping, setStartTyping] = useState(false)
+
+  useEffect(() => {
+    const delayTimer = setTimeout(() => {
+      setStartTyping(true)
+    }, delay)
+
+    return () => clearTimeout(delayTimer)
+  }, [delay])
+
+  useEffect(() => {
+    if (!startTyping)
+        return
+
+    const interval = setInterval(() => {
+      setDisplayedText((prevText) => prevText + text[currentIndex])
+      setCurrentIndex((prevIndex) => prevIndex + 1)
+    }, speed)
+
+    if (currentIndex >= text.length) {
+      clearInterval(interval)
+      onLoad()
+    }
+
+    return () => clearInterval(interval)
+  }, [currentIndex, text, speed, startTyping, onLoad])
+
+  return (
+    <span className={`${className}`} dangerouslySetInnerHTML={{ __html: displayedText }} />
+  )
 }

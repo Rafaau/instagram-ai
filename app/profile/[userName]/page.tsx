@@ -7,11 +7,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRight as right, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { fetchData } from "@component/utils/fetchData"
 import { Photo } from "@component/typings"
-import { fetchBio, fetchSinglePhoto, getComments, getPostDate } from "@component/utils/providers"
+import { fetchBio, fetchDesc, fetchSinglePhoto, getComments, getPostDate } from "@component/utils/providers"
 import { AppContext } from "@component/contexts/appContext"
 import PhotosList from "@component/app/PhotosList"
 import { TypeAnimation } from "react-type-animation"
 import { FollowsList } from "../FollowsList"
+import { TypeAnimationCustom } from "@component/styles/textAnimation"
+import { parseHashtags, parseHashtagsFixed } from "@component/styles/hashtags"
+import { PhotoPrompts } from "@component/lib/prompts"
 
 type PageProps = {
     params: {
@@ -35,6 +38,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null)
     const [view, setView] = useState<View>(View.PROFILE)
     const [isLoading, setIsLoading] = useState(false)
+    const [bioLoaded, setBioLoaded] = useState(false)
     const isMounted = useRef(true)
 
     useEffect(() => {
@@ -55,15 +59,24 @@ export default function UserProfile({ params: { userName } }: PageProps) {
         if (!user) {
             router.push('/')
         } else if (user?.photos!.length < user?.posts! && !isLoading) {
-            fetchBio().then(bio => {
-                user.bio = bio
-            })
+            if (!user.bio)
+                fetchBio(user.prompt!.gender!).then(bio => {
+                    user.bio = bio
+                })
             fetchPhotos()
         }
     }, [state.users, isLoading])
 
     const getPhoto = async (index: number) => {
-        const photo = await fetchSinglePhoto(user.prompt!.prompt!)
+        let photoPrompt = user.prompt!
+
+        if (Math.floor(Math.random() * 4) == 0) {
+            const random = Math.floor(Math.random() * PhotoPrompts.length)
+            if (random > 9)
+                photoPrompt = PhotoPrompts[random]
+        }
+
+        const photo = await fetchSinglePhoto(photoPrompt!.prompt)
         const likes = Math.floor(Math.random() * 5000)
         const newPhoto: Photo = {
             index,
@@ -74,11 +87,12 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                 followers: user.followers,
                 following: user.following,
                 posts: user.posts, 
-                prompt: user.prompt!
+                prompt: user.prompt!,
+                isDispatched: user.isDispatched
             },
             likes: likes,
-            desc: 'no filter no filter no filter no filter no filter no filter',
-            comments: await getComments(likes),
+            desc: await fetchDesc(photoPrompt!.gender),
+            comments: await getComments(likes, photoPrompt!.gender),
             isLiked: false,
             postDate: getPostDate(),
             isDispatched: true,
@@ -201,14 +215,17 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                     </div>
                     <div className="overflow-y-scroll hide-scrollbar h-[80%] pb-[5vh]">
                         <div className="p-[1.5vh]">
-                            <div className="mt-[1vh] h-[30%]">
-                                {user.bio && <TypeAnimation
-                                    sequence={[0, user.bio.toString() ]}
-                                    wrapper="p"
-                                    className="text-[2vh] whitespace-pre-line"
-                                    cursor={false}
-                                    speed={user?.photos?.length! > 2 ? 99 : 40}
-                                />}
+                            <div className="h-[30%]">
+                                {user.bio && !user.isDispatched &&                                     
+                                    <TypeAnimationCustom 
+                                        text={parseHashtags(user.bio)} 
+                                        speed={user.photos?.length! > 2 ? 99 : 60}
+                                        onLoad={() => { user.isDispatched = true }}
+                                        className={'text-[2vh] whitespace-pre-line leading-[0.1vh]'}/>
+                                }
+                                {user.bio && user.isDispatched &&
+                                    <p className="text-[2vh] whitespace-pre-line">{parseHashtagsFixed(user.bio)}</p>
+                                }
                             </div>
                             <m.button
                                 initial={{ opacity: 0, scale: 0.5 }}
@@ -236,7 +253,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                                         prevState[index] = true
                                         return [...prevState]
                                     })}
-                                    onClick={() => setCurrentPhoto(photo)}
+                                    onClick={() => { setCurrentPhoto(photo) } }
                                     key={index} 
                                     src={photo.imageSrc}
                                     className="border border-gray-300 cursor-pointer"/>

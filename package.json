@@ -29,6 +29,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-spinners": "^0.13.8",
+    "react-string-replace": "^1.1.0",
     "react-textarea-autosize": "^8.4.1",
     "react-type-animation": "^3.0.1",
     "selenium-webdriver": "^4.9.0",

@@ -10,7 +10,7 @@ import { AppContext } from '@component/contexts/appContext'
 import { useRouter } from 'next/navigation'
 import { TypeAnimation } from 'react-type-animation'
 import { get } from 'http'
-import { Prompts } from '@component/lib/prompts'
+import { PhotoPrompts } from '@component/lib/prompts'
 
 interface PageProps {
     user: User,
@@ -77,7 +77,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
         isLoading = true
 
         const random = Math.floor(Math.random() * 9)
-        const prompt = Prompts[random]
+        const prompt = PhotoPrompts[random]
         const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
 
         const photo = await fetchSinglePhoto(prompt.prompt!)
@@ -120,7 +120,7 @@ export function FollowsList ({ user, view, setViewCallback }: PageProps) {
         isLoading = true
 
         const random = Math.floor(Math.random() * 9)
-        const prompt = Prompts[random]
+        const prompt = PhotoPrompts[random]
         const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
 
         const photo = await fetchSinglePhoto(prompt.prompt!)

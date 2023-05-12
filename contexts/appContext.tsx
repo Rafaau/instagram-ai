@@ -7,7 +7,7 @@ export type AppState = {
 }
 
 type AppAction = {
-    type: 'SET_PHOTOS' | 'LIKE_OR_UNLIKE' | 'ADD_COMMENT' | 'SET_USERS' | 'FOLLOW_OR_UNFOLLOW' | 'SET_FOLLOWERS' | 'SET_FOLLOWING'
+    type: 'SET_PHOTOS' | 'LIKE_OR_UNLIKE' | 'ADD_COMMENT' | 'SET_USERS' | 'FOLLOW_OR_UNFOLLOW' | 'SET_FOLLOWERS' | 'SET_FOLLOWING' | 'MARK_AS_DISPATCHED'
     payload: any
 }
 
@@ -130,6 +130,20 @@ const appReducer = (state: AppState, action: AppAction) => {
                     return user
                 })
             }    
+        case 'MARK_AS_DISPATCHED':
+            return {
+                ...state,
+                users: state.users.map(user => {
+                    if (user.userName == action.payload) {
+                        console.log('log')
+                        return {
+                            ...user,
+                            isDispatched: true
+                        }
+                    }
+                    return user
+                })
+            }
         default:
             return state
     }

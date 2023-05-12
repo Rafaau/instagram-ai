@@ -8,11 +8,12 @@ import { faHeart as liked, faArrowLeft as left } from '@fortawesome/free-solid-s
 import { ClipLoader } from "react-spinners";
 import { TypeAnimation } from "react-type-animation";
 import { motion as m } from 'framer-motion'
-import { TextAnimation } from "@component/styles/textAnimation";
+import { TextAnimation, TypeAnimationCustom } from "@component/styles/textAnimation";
 import { useRouter } from "next/navigation";
 import { AppContext } from "@component/contexts/appContext";
 import { fetchComment, fetchDesc, fetchSinglePhoto, fetchFemaleUsername, getComments, getPostDate, fetchMaleUsername } from "@component/utils/providers";
-import { Prompts } from "@component/lib/prompts";
+import { PhotoPrompts } from "@component/lib/prompts";
+import { parseHashtags, parseHashtagsFixed } from "@component/styles/hashtags";
 
 const enum View {
     PHOTOS,
@@ -52,13 +53,14 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
         if (photosLength != 0) currentIndex++
 
         const random = Math.floor(Math.random() * 9)
-        const prompt = Prompts[random]
+        const prompt = PhotoPrompts[random]
         const userName = prompt.gender == 'female' ? await fetchFemaleUsername() : await fetchMaleUsername()
+        let photoPrompt = prompt
 
-        fetchSinglePhoto(prompt.prompt!).then(async (photo) => {
+        fetchSinglePhoto(photoPrompt.prompt!).then(async (photo) => {
             const likes = Math.floor(Math.random() * 5000) 
-            const comments = await getComments(likes)
-            const desc = await fetchDesc()
+            const comments = await getComments(likes, photoPrompt.gender)
+            const desc = await fetchDesc(photoPrompt.gender)
             isRunOut = photo.isRunOut
             setImageLoaded((prev) => [...prev, false])
             setPhotos((prevPhotos) => {
@@ -189,7 +191,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
         const container = document.getElementById('container')!
         const boxWidth = container?.offsetWidth
         const getComment = async (index: number) => {
-            const comment = await fetchComment()
+            const comment = await fetchComment(undefined, currentPhoto!.user.prompt!.gender!)
             setPhotos((prevPhotos) => {
                 prevPhotos[prevPhotos.findIndex(p => p.likes == currentPhoto!.likes)].comments[index] = comment[0]
  
@@ -344,13 +346,15 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                                     cursor={false}
                                     speed={photo.isDispatched ? 99: 60}
                                 />
-                                <TypeAnimation
-                                    sequence={[photo.isDispatched ? 0 : 3300, photo.desc ]}
-                                    wrapper="span"
-                                    className="ml-2 text-[2vh]"
-                                    cursor={false}
-                                    speed={photo.isDispatched ? 99 : 60}
-                                />             
+                                {photo.isDispatched && <span className="ml-2 text-[2vh] whitespace-pre-line">
+                                    {parseHashtagsFixed(photo.desc)} 
+                                </span>}
+                                {!photo.isDispatched && <TypeAnimationCustom 
+                                    text={parseHashtags(photo.desc)} 
+                                    speed={60}
+                                    delay={3300} 
+                                    onLoad={() => {}}
+                                    className={'ml-2 text-[2vh] whitespace-pre-line'} />}
                             </p>      
                             {photo.comments.length > 1 &&
                                 <div onClick={() => handleViewComments(photo)}>
