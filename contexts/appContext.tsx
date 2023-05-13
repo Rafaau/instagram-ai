@@ -3,17 +3,27 @@ import { Dispatch, SetStateAction, createContext, useReducer, useState } from "r
 
 export type AppState = {
     photos: Photo[]
-    users: User[]
+    users: User[],
+    isExceeded: boolean
 }
 
 type AppAction = {
-    type: 'SET_PHOTOS' | 'LIKE_OR_UNLIKE' | 'ADD_COMMENT' | 'SET_USERS' | 'FOLLOW_OR_UNFOLLOW' | 'SET_FOLLOWERS' | 'SET_FOLLOWING' | 'MARK_AS_DISPATCHED'
+    type: 'SET_PHOTOS' 
+    | 'LIKE_OR_UNLIKE' 
+    | 'ADD_COMMENT' 
+    | 'SET_USERS' 
+    | 'FOLLOW_OR_UNFOLLOW' 
+    | 'SET_FOLLOWERS' 
+    | 'SET_FOLLOWING' 
+    | 'MARK_AS_DISPATCHED'
+    | 'SET_EXCEEDED'
     payload: any
 }
 
 const initialState: AppState = {
     photos: [],
-    users: []
+    users: [],
+    isExceeded: false
 }
 
 const AppContext = createContext<{ state: AppState, dispatch: Dispatch<AppAction> }>({
@@ -143,6 +153,11 @@ const appReducer = (state: AppState, action: AppAction) => {
                     }
                     return user
                 })
+            }
+        case 'SET_EXCEEDED':
+            return {
+                ...state,
+                isExceeded: action.payload
             }
         default:
             return state

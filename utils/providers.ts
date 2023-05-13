@@ -99,15 +99,15 @@ export async function getComments(likes: number, gender: string) {
             comments = []
             break
         case (likes > 100 && likes < 1000):
-            random = Math.floor(Math.random() * 3)
+            random = Math.floor(Math.random() * 2)
             comments = await fetchComment(random, gender)
             break
         case (likes > 1000 && likes < 3000):
-            random = Math.floor(Math.random() * 6)
+            random = Math.floor(Math.random() * 4)
             comments = await fetchComment(random, gender)
             break
         case (likes > 3000 && likes <= 5000):
-            random = Math.floor(Math.random() * 9)
+            random = Math.floor(Math.random() * 7)
             comments = await fetchComment(random, gender)
             break
         default:

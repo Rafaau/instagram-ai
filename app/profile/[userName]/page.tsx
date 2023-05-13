@@ -105,7 +105,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
             user
         ]})
 
-        localStorage.setItem(`${user.prompt?.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))         
+        localStorage.setItem(`${photo.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))         
     }
 
     const redirectToHome = () => {
@@ -218,13 +218,13 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                             <div className="h-[30%]">
                                 {user.bio && !user.isDispatched &&                                     
                                     <TypeAnimationCustom 
-                                        text={parseHashtags(user.bio)} 
+                                        text={parseHashtags(user.bio.trimStart())} 
                                         speed={user.photos?.length! > 2 ? 99 : 60}
                                         onLoad={() => { user.isDispatched = true }}
                                         className={'text-[2vh] whitespace-pre-line leading-[0.1vh]'}/>
                                 }
                                 {user.bio && user.isDispatched &&
-                                    <p className="text-[2vh] whitespace-pre-line">{parseHashtagsFixed(user.bio)}</p>
+                                    <p className="text-[2vh] whitespace-pre-line">{parseHashtagsFixed(user.bio.trimStart())}</p>
                                 }
                             </div>
                             <m.button

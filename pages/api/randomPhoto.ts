@@ -1,22 +1,6 @@
+import { authorizeServiceAccount } from '@component/utils/apiHelpers'
 import { google } from 'googleapis'
 import type { NextApiRequest, NextApiResponse } from 'next'
-
-async function authorizeServiceAccount() {
-    const auth = new google.auth.GoogleAuth({
-        credentials: {
-            client_email: process.env.GOOGLE_CLIENT_EMAIL,
-            private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-        },
-        scopes: [
-            'https://www.googleapis.com/auth/drive',
-            'https://www.googleapis.com/auth/drive.file',
-            'https://www.googleapis.com/auth/drive.photos.readonly'
-        ],
-    })
-
-    return auth
-}
-
 
 export default async function handler(
   req: NextApiRequest,
@@ -45,7 +29,6 @@ export default async function handler(
 
     try {
         const result = await drive.files.list({
-            //q: `name contains 'black_girl_' and not name contains 'black_girlglasses'`,
             q: prompt,
             fields: 'nextPageToken, files(id, name, webContentLink)',
             supportsAllDrives: true,
@@ -62,7 +45,6 @@ export default async function handler(
                 randomFileIndex = Math.floor(Math.random() * files.length)
             } while (usedIndexes.includes(randomFileIndex))
 
-            //const randomFileIndex = Math.floor(Math.random() * files.length)
             const randomFile = files[randomFileIndex]
 
             await makeFilePublic(randomFile.id as string)
@@ -71,7 +53,7 @@ export default async function handler(
             res.status(200).json({ 
                 src: `https://drive.google.com/uc?export=view&id=${randomFile.id}`, 
                 usedIndexes: usedIndexes,
-                isRunOut: usedIndexes.length == files.length 
+                prompt: prompt
             })
         }
         else {

@@ -1,6 +1,9 @@
 import { GirlDescPlaceholders, ManDescPlaceholders } from '@component/lib/placeholders'
+import { GirlDescPrompts, ManDescPrompts } from '@component/lib/prompts'
+import { configuration } from '@component/utils/apiHelpers'
+import Redis from 'ioredis'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { Configuration, OpenAIApi } from 'openai'
+import { OpenAIApi } from 'openai'
 
 export default async function handler(
   req: NextApiRequest,
@@ -8,33 +11,30 @@ export default async function handler(
 ) {
     const gender = req.query.gender as string
 
-    const configuration = new Configuration({
-        organization: process.env.OPENAI_ORGANIZATION,
-        apiKey: process.env.OPENAI_API_KEY,
-    })
-
     const openai = new OpenAIApi(configuration)
 
-    // const redis = new Redis(process.env.REDIS_URL!)
-    // const count = await redis.incr('openai_requests')
-    // if (count == 1)
-    //     await redis.expire('openai_requests', 86400) // 24 hours
+    const redis = new Redis(process.env.REDIS_URL!)
+    const count = await redis.incr('openai_requests')
+    if (count == 1)
+        await redis.expire('openai_requests', 86400) // 24 hours
 
     try {
-        // if (count < 100) {
-            // const result = await openai.createCompletion({
-            //     model: 'text-curie-001',
-            //     prompt: "Create a short, 1-8 words positive comment for a photo.",
-            //     max_tokens: 30,
-            //     temperature: 1,
-            // })
+        if (count <= Number(process.env.DAILY_REQUESTS_LIMIT)) {
+            const prompts = gender == 'female' ? GirlDescPrompts : ManDescPrompts
+            const random = Math.floor(Math.random() * prompts.length)
+            const result = await openai.createCompletion({
+                model: 'text-davinci-001',
+                prompt: prompts[random],
+                max_tokens: 30,
+                temperature: 1,
+            })
 
-            // res.status(200).json({ result: result.data.choices[0].text })
-        // } else {
+            res.status(200).json({ desc: result.data.choices[0].text })
+        } else {
             const placeholders = gender == 'female' ? GirlDescPlaceholders : ManDescPlaceholders
             const random = Math.floor(Math.random() * placeholders.length)
             res.status(200).json({ desc: placeholders[random] })
-        // }
+        }
     } catch (e) {
         console.log(e)
         res.status(500).json({ error: e })

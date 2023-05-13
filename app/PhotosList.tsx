@@ -39,7 +39,6 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     const [inputValue, setInputValue] = useState<string>('')
     const [redirectAnimation, setRedirectAnimation] = useState<boolean>(false)
     const router = useRouter()
-    let isRunOut = false
     let interrupt = false
     let isLoading = false
     let currentIndex = 0
@@ -47,7 +46,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     var TextareaAutosize = require('react-textarea-autosize').default;
 
     const fetchPhoto = async () => {
-        if (isLoading || isRunOut || fetchedPhotos) return
+        if (isLoading || fetchedPhotos) return
         setLoading(true)
         isLoading = true
         if (photosLength != 0) currentIndex++
@@ -61,7 +60,6 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
             const likes = Math.floor(Math.random() * 5000) 
             const comments = await getComments(likes, photoPrompt.gender)
             const desc = await fetchDesc(photoPrompt.gender)
-            isRunOut = photo.isRunOut
             setImageLoaded((prev) => [...prev, false])
             setPhotos((prevPhotos) => {
                 const newPhoto: Photo = {
@@ -97,7 +95,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                 return [...prevPhotos, newPhoto]
             })
 
-            localStorage.setItem(`${prompt.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))           
+            localStorage.setItem(`${photo.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))           
         })
 
         setTimeout(() => {
@@ -116,6 +114,9 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     }, [loading])
 
     useEffect(() => {
+        const container = containerRef.current as any
+        container.addEventListener('wheel', handleScroll)
+
         if (fetchedPhotos) {
             setPhotos(fetchedPhotos)
             photosLength = fetchedPhotos.length
@@ -156,11 +157,6 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
         const destBox = document.getElementById(`${index}`)
         destBox?.scrollIntoView()
     }
-
-    useEffect(() => {
-        const container = containerRef.current as any
-        container.addEventListener('wheel', handleScroll)
-    }, [])
 
     const likeOrUnlike = (photo: Photo) => {
         setPhotos(
@@ -347,10 +343,10 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                                     speed={photo.isDispatched ? 99: 60}
                                 />
                                 {photo.isDispatched && <span className="ml-2 text-[2vh] whitespace-pre-line">
-                                    {parseHashtagsFixed(photo.desc)} 
+                                    {parseHashtagsFixed(photo.desc.trimStart())} 
                                 </span>}
                                 {!photo.isDispatched && <TypeAnimationCustom 
-                                    text={parseHashtags(photo.desc)} 
+                                    text={parseHashtags(photo.desc.trimStart())} 
                                     speed={60}
                                     delay={3300} 
                                     onLoad={() => {}}
@@ -377,7 +373,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                                     speed={photo.isDispatched ? 90 : 60}
                                 /> 
                                 <TypeAnimation
-                                    sequence={[photo.isDispatched ? 0 : 5000, photo.comments[0].content ]}
+                                    sequence={[photo.isDispatched ? 0 : 5000, photo.comments[0].content.trimStart() ]}
                                     wrapper="span"
                                     className="ml-2 text-[2vh]"
                                     cursor={false}
@@ -389,9 +385,14 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                     </div>
                 ))}
                 {loading && (
-                    <div id="loader" className="flex justify-center items-center w-full h-full relative">
+                    <m.div
+                        initial={{ opacity: 0, scale: 0.3 }}
+                        animate={{ opacity: 1, scale: 1 }} 
+                        transition={{ duration: 0.4, ease: 'backInOut' }}
+                        id="loader" 
+                        className="flex justify-center items-center w-full h-full relative">
                         <ClipLoader color="#6B7280" className=""/>
-                    </div>
+                    </m.div>
                 )}
             </m.div>
             {currentPhoto && 
@@ -412,7 +413,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         </div>
                         <div className="ml-[2vh]">
                             <p className="font-bold text-[2vh]">{currentPhoto?.user.userName}</p>
-                            <p className="text-[2vh] leading-[2.5vh]">{currentPhoto?.desc}</p>
+                            <p className="text-[2vh] leading-[2.5vh]">{currentPhoto?.desc.trimStart()}</p>
                         </div>
                     </div>
                     <div id="comments-container" className="overflow-y-scroll hide-scrollbar h-full pb-[25vh]">
@@ -437,7 +438,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                                             speed={commentLoaded[index] ? 99 : 60} />
                                     </div>
                                     <TypeAnimation
-                                        sequence={[commentLoaded[index] ? 0 : 1000, comment?.content ]}
+                                        sequence={[commentLoaded[index] ? 0 : 1000, comment?.content.trimStart() ]}
                                         wrapper="p"
                                         className="text-[2vh] leading-[2.5vh]"
                                         cursor={false}
