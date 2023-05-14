@@ -36,7 +36,7 @@ export const PhotoPrompts = [
         gender: 'male'
     },
     {
-        prompt: "name contains 'motorcyclist_",
+        prompt: "name contains 'motorcyclist_'",
         gender: 'none'
     },
     {

@@ -36,4 +36,5 @@ next-env.d.ts
 
 # dangerous endpoints
 /pages/api/deletePhoto.ts
+/pages/api/checkPromptCount.ts
 
