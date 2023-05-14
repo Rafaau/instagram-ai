@@ -216,6 +216,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
         if (inputValue == '') return
         const newComment = {
             user: { userName: 'You' },
+            userImage: 'blank_avatar.jpg',
             content: inputValue,
             postDate: getPostDate(),
             likes: 0,
@@ -424,7 +425,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                                         initial={{ scale: 0.3, opacity: 0 }}
                                         animate={{ scale: commentLoaded[index] ? 1 : 0, opacity: commentLoaded[index] ? 1 : 0 }}
                                         src={comment?.userImage} 
-                                        className="w-[6.5vh] rounded-full p-[0.4vh] bg-gray-100 cursor-pointer"
+                                        className="w-[6.5vh] rounded-full bg-gray-100 cursor-pointer border border-gray-300"
                                         onClick={() => redirectToUserProfile(comment.user)} 
                                         onLoad={() => handleOnCommentLoad(comment)}/>
                                 </div>
@@ -448,7 +449,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         ))}
                     </div>
                     <div className="flex absolute bottom-[1.8%] left-[1%] min-h-[10%] h-auto w-[98%] px-[1vh] pt-[1vh] border-t bg-gray-100 rounded-b-2xl">
-                        <img src={currentPhoto?.imageSrc} className="w-[5vh] h-[5vh] rounded-full bg-gray-100 mr-[2vh]" />
+                        <img src="blank_avatar.jpg" className="w-[5vh] h-[5vh] rounded-full bg-gray-100 mr-[2vh] border border-gray-300" />
                         <TextareaAutosize
                             value={inputValue}
                             onChange={(e: any) => setInputValue(e.target.value)}
