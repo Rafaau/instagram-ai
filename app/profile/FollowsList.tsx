@@ -3,7 +3,6 @@ import { faXmark as close } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { motion as m } from 'framer-motion'
-import { View } from './[userName]/page'
 import { ClipLoader } from 'react-spinners'
 import { fetchSinglePhoto, fetchFemaleUsername, fetchMaleUsername } from '@component/utils/providers'
 import { AppContext } from '@component/contexts/appContext'
@@ -14,8 +13,14 @@ import { PhotoPrompts } from '@component/lib/prompts'
 
 interface PageProps {
     user: User,
-    view: View,
-    setViewCallback: (view: View) => void
+    view: any,
+    setViewCallback: (view: any) => void
+}
+
+const enum View {
+    PROFILE,
+    FOLLOWERS,
+    FOLLOWING
 }
 
 export function FollowsList ({ user, view, setViewCallback }: PageProps) {

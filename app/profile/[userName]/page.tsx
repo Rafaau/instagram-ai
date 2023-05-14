@@ -22,7 +22,7 @@ type PageProps = {
     }
 }
 
-export const enum View {
+const enum View {
     PROFILE,
     FOLLOWERS,
     FOLLOWING
