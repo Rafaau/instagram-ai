@@ -49,3 +49,12 @@ body {
   -moz-border-radius: 1rem;
   -webkit-border-radius: 1rem;
 }
+
+.htag {
+  color: #3B82F6;
+  cursor: pointer;
+}
+
+.htag:hover {
+  text-decoration: underline;
+}

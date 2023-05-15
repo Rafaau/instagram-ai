@@ -40,7 +40,7 @@ export function LimitStatus () {
             initial={{ opacity: 0, x: "-100%" }}
             animate={{ opacity: exceeded ? 1 : 0, x: 0, width: expanded ? "40vh" : "7vh", height: expanded ? "30vh" : "10vh" }}
             transition={{ duration: 0.3, ease: "backInOut" }}
-            className="flex absolute left-0 top-[10vh] rounded bg-gray-100 cursor-pointer border border-gray-300 z-10 overflow-hidden items-center justify-center"
+            className="flex absolute right-0 sm:left-0 top-[30vh] sm:top-[10vh] rounded bg-gray-100 cursor-pointer border border-gray-300 z-10 overflow-hidden items-center justify-center"
             onClick={() => setExpanded(!expanded)}>
             {!expanded && 
             <m.div

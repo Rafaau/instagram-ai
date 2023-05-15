@@ -178,7 +178,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                                     className="w-[9vh] rounded-full p-[0.4vh] bg-gray-100" />
                             </m.div>
                         </div>
-                        <div className="ml-[2vh] mt-[1vh] text-center">
+                        <div className="sm:ml-[2vh] mt-[1vh] text-center ml-auto">
                             <TypeAnimation
                                 sequence={[user?.photos?.length! > 2 ? 0 : 500, user!.posts!.toString() ]}
                                 wrapper="p"
@@ -215,7 +215,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                     </div>
                     <div className="overflow-y-scroll hide-scrollbar h-[80%] pb-[5vh]">
                         <div className="p-[1.5vh]">
-                            <div className="h-[30%]">
+                            <div className="h-[30%] w-[80%] sm:w-full">
                                 {user.bio && !user.isDispatched &&                                     
                                     <TypeAnimationCustom 
                                         text={parseHashtags(user.bio.trimStart())} 

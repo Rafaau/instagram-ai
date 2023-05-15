@@ -313,7 +313,8 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         <m.img
                             initial={{ scale: 0.3, opacity: 0 }}
                             animate={{ scale: imageLoaded[photo.index] ? 1 : 0, opacity: imageLoaded[photo.index] ? 1 : 0 }}
-                            src={photo.imageSrc} />
+                            src={photo.imageSrc} 
+                            className="m-auto w-[55vh] sm:w-full"/>
                         {imageLoaded[photo.index] && <>
                             <m.div
                                 initial={{ opacity: 0 }}
