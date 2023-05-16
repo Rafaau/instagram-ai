@@ -9,6 +9,7 @@ export type User = {
     posts?: number
     isFollowed?: boolean
     bio?: string
+    stories?: Story[]
     isDispatched?: boolean
     prompt?: { prompt: string, gender: string }
 }
@@ -33,4 +34,10 @@ export type Comment = {
     likes?: number
     isLiked?: boolean
     isDispatched?: boolean
+}
+
+export type Story = {
+    user?: User
+    photos?: string[]
+    postDates?: string[]
 }

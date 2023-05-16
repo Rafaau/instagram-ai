@@ -6,7 +6,7 @@ import { motion as m } from 'framer-motion'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRight as right, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { fetchData } from "@component/utils/fetchData"
-import { Photo } from "@component/typings"
+import { Photo, Story } from "@component/typings"
 import { fetchBio, fetchDesc, fetchSinglePhoto, getComments, getPostDate } from "@component/utils/providers"
 import { AppContext } from "@component/contexts/appContext"
 import PhotosList from "@component/app/PhotosList"
@@ -15,6 +15,7 @@ import { FollowsList } from "../FollowsList"
 import { TypeAnimationCustom } from "@component/styles/textAnimation"
 import { parseHashtags, parseHashtagsFixed } from "@component/styles/hashtags"
 import { PhotoPrompts } from "@component/lib/prompts"
+import { Stories } from "../Stories"
 
 type PageProps = {
     params: {
@@ -35,7 +36,9 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     const user = state.users.find(user => user.userName == userName)!
     const [avatarLoaded, setAvatarLoaded] = useState(false)
     const [imageLoaded, setImageLoaded] = useState<boolean[]>(Array(user?.posts).fill(false) || [])
+    const [storyLoaded, setStoryLoaded] = useState<boolean[]>(Array(user?.stories?.length).fill(false) || [])
     const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null)
+    const [currentStory, setCurrentStory] = useState<Story | null>(null)
     const [view, setView] = useState<View>(View.PROFILE)
     const [isLoading, setIsLoading] = useState(false)
     const [bioLoaded, setBioLoaded] = useState(false)
@@ -56,6 +59,18 @@ export default function UserProfile({ params: { userName } }: PageProps) {
             }
             setIsLoading(false)
         }
+
+        const fetchStories = async (index: number) => {
+            let random = Math.floor(Math.random() * 8);
+            random += PhotoPrompts.length - 8;
+            const photoPrompt = PhotoPrompts[random];
+            
+            for (let i = 0; i < Math.floor(Math.random() * 10 + 1); i++) {
+                if (!isMounted.current) return
+                await getStory(index, photoPrompt)
+            }
+        }
+
         if (!user) {
             router.push('/')
         } else if (user?.photos!.length < user?.posts! && !isLoading) {
@@ -63,6 +78,14 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                 fetchBio(user.prompt!.gender!).then(bio => {
                     user.bio = bio
                 })
+            if (user.stories?.some(x => !x.photos?.length)) {
+                console.log(user.stories)
+                for (let i = 0; i < user.stories!.length; i++) {
+                    if (!user.stories![i].photos?.length) {
+                        fetchStories(i)
+                    }
+                }
+            }
             fetchPhotos()
         }
     }, [state.users, isLoading])
@@ -106,6 +129,20 @@ export default function UserProfile({ params: { userName } }: PageProps) {
         ]})
 
         localStorage.setItem(`${photo.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))         
+    }
+
+    const getStory = async (index: number, prompt: any) => {
+        console.log(user.stories)
+
+        const photo = await fetchSinglePhoto(prompt.prompt)
+
+        user.stories![index] = {
+            user: { userImage: user.userImage, userName: user.userName },
+            photos: [...user.stories![index].photos!, photo.src],
+            postDates: [...user.stories![index].postDates!, getPostDate()],
+        }
+
+        localStorage.setItem(`${photo.prompt}_usedIndexes`, JSON.stringify(photo.usedIndexes))       
     }
 
     const redirectToHome = () => {
@@ -240,6 +277,24 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                                 className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] mt-[2vh]">
                                 {user?.isFollowed ? <p>Following  <FontAwesomeIcon icon={faChevronDown}/></p> : 'Follow'}
                             </m.button>
+                            {user?.stories!.length > 0 &&
+                                <div className="flex items-center mt-[2vh]">
+                                    {user.stories!.map((story, index) => (
+                                        <div key={`story-${index}`}>
+                                        {story.photos && 
+                                            <m.img      
+                                                initial={{ opacity: 0, scale: 0.5 }}
+                                                animate={{ opacity: storyLoaded[index] ? 1 : 0, scale: storyLoaded[index] ? 1 : 0 }}                                   
+                                                src={story.photos![0]}
+                                                className="w-[9vh] rounded-full p-[0.4vh] bg-gray-100 cursor-pointer border border-gray-200 mr-[2vh]"
+                                                onClick={() => setCurrentStory(story)}
+                                                onLoad={() => setStoryLoaded((prev) => { prev[index] = true; return prev; })}>
+                                            </m.img>
+                                        }
+                                        </div>
+                                    ))}
+                                </div>
+                            }
                         </div>
                         <div className="grid grid-cols-3 gap-1">
                             {user?.photos?.map((photo, index) => (
@@ -268,6 +323,9 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                     onBackToProfile={() => { setCurrentPhoto(null); setAvatarLoaded(false); } }
                     photoIndex={currentPhoto.index} 
                     photoLiked={(photo: Photo) => likeOrUnlikePhoto(photo)}/>
+            }
+            {currentStory &&
+                <Stories story={currentStory} closeStories={() => setCurrentStory(null)}/>
             }
             {view != View.PROFILE && <FollowsList user={user!} view={view} setViewCallback={(view: View) => handleSetView(view)}/>}
         </div>

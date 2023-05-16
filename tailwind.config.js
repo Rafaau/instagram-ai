@@ -7,6 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      flex: {
+        '0-0-100': '0 0 100%',
+      },
       screens: {
         'xs': '60vh',
       },

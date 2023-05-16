@@ -1,6 +1,6 @@
 'use client'
 
-import { Comment, Photo, User } from "@component/typings";
+import { Comment, Photo, Story, User } from "@component/typings";
 import { useContext, useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart as unliked, faComment as comment } from '@fortawesome/free-regular-svg-icons'
@@ -60,6 +60,10 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
             const likes = Math.floor(Math.random() * 5000) 
             const comments = await getComments(likes, photoPrompt.gender)
             const desc = await fetchDesc(photoPrompt.gender)
+            const stories: Story[] = []
+            for (let i = 0; i < Math.floor(Math.random() * 3); i++) {
+                stories.push({ photos: [], postDates: [] })
+            }
             setImageLoaded((prev) => [...prev, false])
             setPhotos((prevPhotos) => {
                 const newPhoto: Photo = {
@@ -82,6 +86,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         })),
                         posts: Math.floor(Math.random() * 25 + 5), 
                         photos: [],
+                        stories,
                         prompt,
                     },
                     likes: likes,
@@ -281,8 +286,8 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                 transition={{ ease: 'backInOut', duration: 0.3 }}
                 ref={containerRef} 
                 className="h-[100%] w-[100%] absolute left-0 top-0 overflow-y-hidden hide-scrollbar">
-                {photos.map((photo: any) => (
-                    <div id={photo.index} key={photo.index} className="h-[100%] pt-[0.5vh]">
+                {photos.map((photo: any, index) => (
+                    <div id={photo.index} key={index} className="h-[100%] pt-[0.5vh]">
                         <div className="flex items-center m-[1vh] cursor-pointer" onClick={() => redirectToUserProfile(photo.user)}>
                             <m.div 
                                 initial={{ x: "-100%", opacity: 0 }}
