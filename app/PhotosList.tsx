@@ -148,10 +148,12 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
             const nextBox = document.getElementById(`${currentIndex + 1}`)
             nextBox?.scrollIntoView({ behavior: 'smooth' })
             if (nextBox && currentIndex != photosLength) currentIndex++
+            retrieveComments(currentIndex)
         } else {
             const prevBox = document.getElementById(`${currentIndex - 1}`)
             prevBox?.scrollIntoView({ behavior: 'smooth' })
             if (prevBox && currentIndex != 0) currentIndex--
+            retrieveComments(currentIndex)
         }
         setTimeout(() => {
             interrupt = false
@@ -161,6 +163,23 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     const scrollToIndex = (index: number) => {
         const destBox = document.getElementById(`${index}`)
         destBox?.scrollIntoView()
+    }
+
+    const retrieveComments = async (index: number) => {
+        console.log('log')
+        if (fetchedPhotos && fetchedPhotos[index].comments.length == 0) {
+            console.log('log2')
+            const comments = await getComments(fetchedPhotos[index].likes, fetchedPhotos[index].user.prompt!.gender!)
+
+            setPhotos((prevPhotos) => {
+                const photo = prevPhotos[index]
+                photo.comments = comments
+
+                return [...prevPhotos]
+            })
+            setView(View.COMMENTS)
+            setView(View.PHOTOS)
+        }
     }
 
     const likeOrUnlike = (photo: Photo) => {
