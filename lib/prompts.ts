@@ -94,11 +94,11 @@ export const ManDescPrompts = [
 ]
 
 export const GirlCommentPrompts = [
-    "Create a short, 1-10 words comment under the instagram photo of a girl with 0-3 emojis.",
+    "Create a positive, short, 1-10 words comment under the instagram photo of a girl with 0-3 emojis.",
 ]
 
 export const ManCommentPrompts = [
-    "Create a short, 1-10 words comment under the instagram photo of a man with 0-3 emojis."
+    "Create a positive, short, 1-10 words comment under the instagram photo of a man with 0-3 emojis."
 ]
 
 export const MotorcyclistDescPrompts = [
