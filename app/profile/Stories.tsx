@@ -86,7 +86,7 @@ export function Stories ({ story, closeStories }: PageProps) {
                 </div>
             ))}
             </div>
-            <div className="mx-auto relative flex h-[37vh] items-center space-x-[2vh] overflow-x-scroll hide-scrollbar w-[37vh]">
+            <div className="mx-auto relative flex h-[37vh] items-center space-x-[2vh] overflow-hidden hide-scrollbar w-[37vh]">
                 {story.photos?.map((photo, index) => (
                     <m.div
                         animate={{ scale: currentPhoto ==  index ? 1.15 : 1 }}

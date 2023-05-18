@@ -133,8 +133,6 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     }
 
     const getStory = async (index: number, prompt: any) => {
-        console.log(user.stories)
-
         const photo = await fetchSinglePhoto(prompt.prompt)
 
         user.stories![index] = {

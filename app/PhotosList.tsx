@@ -166,9 +166,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     }
 
     const retrieveComments = async (index: number) => {
-        console.log('log')
         if (fetchedPhotos && fetchedPhotos[index].comments.length == 0) {
-            console.log('log2')
             const comments = await getComments(fetchedPhotos[index].likes, fetchedPhotos[index].user.prompt!.gender!)
 
             setPhotos((prevPhotos) => {
