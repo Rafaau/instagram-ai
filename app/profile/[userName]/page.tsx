@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useContext, useEffect, useRef, useState } from "react"
 import { motion as m } from 'framer-motion'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faArrowRight as right, faChevronDown } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight as right, faChevronDown, faTableCells as grid, faClapperboard as reels, faIdBadge as mention } from '@fortawesome/free-solid-svg-icons'
 import { fetchData } from "@component/utils/fetchData"
 import { Photo, Story } from "@component/typings"
 import { fetchBio, fetchDesc, fetchSinglePhoto, getComments, getPostDate } from "@component/utils/providers"
@@ -29,6 +29,12 @@ const enum View {
     FOLLOWING
 }
 
+const enum ContentView {
+    PHOTOS,
+    REELS,
+    TAGGED
+}
+
 export default function UserProfile({ params: { userName } }: PageProps) {
     const { state, dispatch } =  useContext(AppContext)
     const [redirectAnimation, setRedirectAnimation] = useState(false)
@@ -40,6 +46,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
     const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null)
     const [currentStory, setCurrentStory] = useState<Story | null>(null)
     const [view, setView] = useState<View>(View.PROFILE)
+    const [contentView, setContentView] = useState<ContentView>(ContentView.PHOTOS)
     const [isLoading, setIsLoading] = useState(false)
     const [bioLoaded, setBioLoaded] = useState(false)
     const isMounted = useRef(true)
@@ -186,6 +193,19 @@ export default function UserProfile({ params: { userName } }: PageProps) {
         setView(view)
     }
 
+    useEffect(() => {
+        const photos = document.getElementById('photos')
+        const reels = document.getElementById('reels')
+        const tagged = document.getElementById('tagged')
+
+        if (contentView == ContentView.PHOTOS)
+            photos?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        else if (contentView == ContentView.REELS)
+            reels?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        else if (contentView == ContentView.TAGGED)
+            tagged?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, [contentView])
+
     return (
         <div className="hide-scrollbar h-[100%] relative items-center">
             {!currentPhoto && user &&
@@ -249,7 +269,7 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                             <p className="text-[2vh]">Following</p>
                         </div>
                     </div>
-                    <div className="overflow-y-scroll hide-scrollbar h-[80%] pb-[5vh]">
+                    <div className="overflow-y-scroll hide-scrollbar h-[80%] pb-[2vh]">
                         <div className="p-[1.5vh]">
                             <div className="h-[30%] w-[80%] sm:w-full">
                                 {user.bio && !user.isDispatched &&                                     
@@ -295,23 +315,49 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                                 </div>
                             }
                         </div>
-                        <div className="grid grid-cols-3 gap-1">
-                            {user?.photos?.map((photo, index) => (
-                                <m.img
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ 
-                                        opacity: imageLoaded[index] ? 1 : 0, 
-                                        scale: imageLoaded[index] ? 1 : 0,
-                                    }}
-                                    onLoad={() => setImageLoaded((prevState) => {
-                                        prevState[index] = true
-                                        return [...prevState]
-                                    })}
-                                    onClick={() => { setCurrentPhoto(photo) } }
-                                    key={index} 
-                                    src={photo.imageSrc}
-                                    className="border border-gray-300 cursor-pointer"/>
-                            ))}     
+                        <div className="flex sticky top-[-1%] text-[3vh] border-b bg-gray-100 h-[12%] justify-center items-center z-10">
+                            <FontAwesomeIcon 
+                                icon={grid} 
+                                className={`cursor-pointer w-full text-gray-${contentView == ContentView.PHOTOS ? 700 : 400}`}
+                                onClick={() => setContentView(ContentView.PHOTOS)}/>
+                            <FontAwesomeIcon 
+                                icon={reels} 
+                                className={`cursor-pointer w-full text-gray-${contentView == ContentView.REELS ? 700 : 400}`}
+                                onClick={() => setContentView(ContentView.REELS)}/>
+                            <FontAwesomeIcon 
+                                icon={mention} 
+                                className={`cursor-pointer w-full scale-y-90 text-gray-${contentView == ContentView.TAGGED ? 700 : 400}`}
+                                onClick={() => setContentView(ContentView.TAGGED)}/>
+                            <m.div
+                                animate={{ left: contentView == ContentView.PHOTOS ? '0%' : contentView == ContentView.REELS ? '33%' : '66%' }}
+                                className="absolute bottom-0 h-[0.5vh] w-[33%] bg-gray-700">                          
+                            </m.div>
+                        </div>
+                        <div className="flex space-x-[1vh] relative overflow-x-scroll hide-scrollbar">
+                            <div id="photos" className="grid grid-cols-3 gap-1">
+                                {user?.photos?.map((photo, index) => (
+                                    <m.img
+                                        initial={{ opacity: 0, scale: 0.5 }}
+                                        animate={{ 
+                                            opacity: imageLoaded[index] ? 1 : 0, 
+                                            scale: imageLoaded[index] ? 1 : 0,
+                                        }}
+                                        onLoad={() => setImageLoaded((prevState) => {
+                                            prevState[index] = true
+                                            return [...prevState]
+                                        })}
+                                        onClick={() => { setCurrentPhoto(photo) } }
+                                        key={index} 
+                                        src={photo.imageSrc}
+                                        className="border border-gray-300 cursor-pointer"/>
+                                ))}     
+                            </div>
+                            <div id="reels" className="absolute left-[100%] bg-gray-100 w-full h-full">
+
+                            </div>
+                            <div id="tagged" className="absolute left-[200%] bg-gray-100 w-full h-full">
+
+                            </div>
                         </div>
                     </div>
                 </m.div>
