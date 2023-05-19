@@ -121,3 +121,7 @@ export async function fetchSinglePhoto(prompt: string) {
     const usedIndexes = JSON.parse(localStorage.getItem(`${prompt}_usedIndexes`) || '[]')
     return fetchData(`randomPhoto?prompt=${prompt}&usedIndexes=${JSON.stringify(usedIndexes)}`)
 }
+
+export async function fetchDM(input: string, history: any) {
+    return fetchData(`randomDM?input=${input}&history=${JSON.stringify(history)}`)
+}

@@ -17,6 +17,7 @@ type AppAction = {
     | 'SET_FOLLOWING' 
     | 'MARK_AS_DISPATCHED'
     | 'SET_EXCEEDED'
+    | 'SEND_DIRECT_MESSAGE'
     payload: any
 }
 
@@ -158,6 +159,19 @@ const appReducer = (state: AppState, action: AppAction) => {
             return {
                 ...state,
                 isExceeded: action.payload
+            }
+        case 'SEND_DIRECT_MESSAGE':
+            return {
+                ...state,
+                users: state.users.map(user => {
+                    if (user.userName == action.payload.userName) {
+                        return {
+                            ...user,
+                            directMessages: [...user.directMessages!, action.payload.message]
+                        }
+                    }
+                    return user
+                })
             }
         default:
             return state

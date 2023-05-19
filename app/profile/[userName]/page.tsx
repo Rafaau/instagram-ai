@@ -16,6 +16,7 @@ import { TypeAnimationCustom } from "@component/styles/textAnimation"
 import { parseHashtags, parseHashtagsFixed } from "@component/styles/hashtags"
 import { PhotoPrompts } from "@component/lib/prompts"
 import { Stories } from "../Stories"
+import { DirectMessage } from "../DirectMessage"
 
 type PageProps = {
     params: {
@@ -26,7 +27,8 @@ type PageProps = {
 const enum View {
     PROFILE,
     FOLLOWERS,
-    FOLLOWING
+    FOLLOWING,
+    DM
 }
 
 const enum ContentView {
@@ -86,7 +88,6 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                     user.bio = bio
                 })
             if (user.stories?.some(x => !x.photos?.length)) {
-                console.log(user.stories)
                 for (let i = 0; i < user.stories!.length; i++) {
                     if (!user.stories![i].photos?.length) {
                         fetchStories(i)
@@ -283,19 +284,34 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                                     <p className="text-[2vh] whitespace-pre-line">{parseHashtagsFixed(user.bio.trimStart())}</p>
                                 }
                             </div>
-                            <m.button
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ 
-                                    opacity: user.bio ? 1 : 0,
-                                    scale: user.bio ? 1 : 0,
-                                    backgroundColor: user?.isFollowed ? '#E5E7EB' : '#2563EB',
-                                    color: user?.isFollowed ? '#111827' : '#F3F4F6',
-                                }}
-                                transition={{ duration: 0.2, ease: 'backInOut' }}
-                                onClick={() => followOrUnfollow()} 
-                                className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] mt-[2vh]">
-                                {user?.isFollowed ? <p>Following  <FontAwesomeIcon icon={faChevronDown}/></p> : 'Follow'}
-                            </m.button>
+                            <div className="flex">
+                                <m.button
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ 
+                                        opacity: user.bio ? 1 : 0,
+                                        scale: user.bio ? 1 : 0,
+                                        backgroundColor: user?.isFollowed ? '#E5E7EB' : '#2563EB',
+                                        color: user?.isFollowed ? '#111827' : '#F3F4F6',
+                                    }}
+                                    transition={{ duration: 0.2, ease: 'backInOut' }}
+                                    onClick={() => followOrUnfollow()} 
+                                    className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] mt-[2vh]">
+                                    {user?.isFollowed ? <p>Following  <FontAwesomeIcon icon={faChevronDown}/></p> : 'Follow'}
+                                </m.button>
+                                <m.button
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ 
+                                        opacity: user.bio ? 1 : 0,
+                                        scale: user.bio ? 1 : 0,
+                                        backgroundColor: '#E5E7EB',
+                                        color: '#111827',
+                                    }}
+                                    transition={{ duration: 0.2, ease: 'backInOut' }}
+                                    className="text-[2.3vh] py-[0.5vh] rounded font-semibold w-[40%] mt-[2vh] ml-[2vh]"
+                                    onClick={() => setView(View.DM)}>
+                                    Message
+                                </m.button>
+                            </div>
                             {user?.stories!.length > 0 &&
                                 <div className="flex items-center mt-[2vh]">
                                     {user.stories!.map((story, index) => (
@@ -318,15 +334,15 @@ export default function UserProfile({ params: { userName } }: PageProps) {
                         <div className="flex sticky top-[-1%] text-[3vh] border-b bg-gray-100 h-[12%] justify-center items-center z-10">
                             <FontAwesomeIcon 
                                 icon={grid} 
-                                className={`cursor-pointer w-full text-gray-${contentView == ContentView.PHOTOS ? 700 : 400}`}
+                                className={`cursor-pointer w-full text-gray-${contentView == ContentView.PHOTOS ? 700 : 500}`}
                                 onClick={() => setContentView(ContentView.PHOTOS)}/>
                             <FontAwesomeIcon 
                                 icon={reels} 
-                                className={`cursor-pointer w-full text-gray-${contentView == ContentView.REELS ? 700 : 400}`}
+                                className={`cursor-pointer w-full text-gray-${contentView == ContentView.REELS ? 700 : 500}`}
                                 onClick={() => setContentView(ContentView.REELS)}/>
                             <FontAwesomeIcon 
                                 icon={mention} 
-                                className={`cursor-pointer w-full scale-y-90 text-gray-${contentView == ContentView.TAGGED ? 700 : 400}`}
+                                className={`cursor-pointer w-full scale-y-90 text-gray-${contentView == ContentView.TAGGED ? 700 : 500}`}
                                 onClick={() => setContentView(ContentView.TAGGED)}/>
                             <m.div
                                 animate={{ left: contentView == ContentView.PHOTOS ? '0%' : contentView == ContentView.REELS ? '33%' : '66%' }}
@@ -372,7 +388,8 @@ export default function UserProfile({ params: { userName } }: PageProps) {
             {currentStory &&
                 <Stories story={currentStory} closeStories={() => setCurrentStory(null)}/>
             }
-            {view != View.PROFILE && <FollowsList user={user!} view={view} setViewCallback={(view: View) => handleSetView(view)}/>}
+            {view != View.PROFILE && view != View.DM && <FollowsList user={user!} view={view} setViewCallback={(view: View) => handleSetView(view)}/>}
+            {view == View.DM && <DirectMessage user={user!} setViewCallback={(view: View) => handleSetView(view)} />}
         </div>
     )
 }

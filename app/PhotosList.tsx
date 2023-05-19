@@ -43,7 +43,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
     let isLoading = false
     let currentIndex = 0
     let photosLength = 0
-    var TextareaAutosize = require('react-textarea-autosize').default;
+    var TextareaAutosize = require('react-textarea-autosize').default
 
     const fetchPhoto = async () => {
         if (isLoading || fetchedPhotos) return
@@ -88,6 +88,7 @@ export default function PhotosList({ fetchedPhotos, onBackToProfile, photoIndex,
                         photos: [],
                         stories,
                         prompt,
+                        directMessages: [],
                     },
                     likes: likes,
                     desc,

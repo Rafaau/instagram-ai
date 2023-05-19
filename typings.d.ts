@@ -12,6 +12,7 @@ export type User = {
     stories?: Story[]
     isDispatched?: boolean
     prompt?: { prompt: string, gender: string }
+    directMessages?: DirectMessage[]
 }
 
 export type Photo = {
@@ -40,4 +41,9 @@ export type Story = {
     user?: User
     photos?: string[]
     postDates?: string[]
+}
+
+export type DirectMessage = {
+    user?: User
+    content?: string
 }
