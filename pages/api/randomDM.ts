@@ -33,7 +33,7 @@ export default async function handler(
         await redis.expire('openai_requests', 86400) // 24 hours
 
     try {
-        if (count >= Number(process.env.DAILY_REQUESTS_LIMIT)) {
+        if (count <= Number(process.env.DAILY_REQUESTS_LIMIT)) {
             const result = await openai.createChatCompletion({
                 model: 'gpt-3.5-turbo',
                 messages: messages,

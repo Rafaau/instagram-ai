@@ -48,7 +48,7 @@ export function DirectMessage ({ user, setViewCallback }: PageProps) {
             const input = document.getElementById('input')
             input?.focus()
             const message = {
-                user: { userName: 'You', userImage: 'blank_avatar.jpg' },
+                user: { userName: 'You', userImage: '/blank_avatar.jpg' },
                 content: inputValue
             }
 
@@ -141,7 +141,7 @@ export function DirectMessage ({ user, setViewCallback }: PageProps) {
                         <m.img
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }} 
-                            src={message.user!.userImage} className="w-[5vh] h-[5vh] rounded-full"/>
+                            src={message.user!.userImage} className="w-[5vh] h-[5vh] rounded-full border border-gray-300"/>
                         <m.p 
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -174,7 +174,8 @@ export function DirectMessage ({ user, setViewCallback }: PageProps) {
                     </div>
                 }
             </div>
-            <div className="flex absolute bottom-[2%] min-h-[10%] h-auto w-full px-[1vh] pt-[1vh] border-t bg-gray-100 rounded-b-2xl">
+            <div className="flex items-center absolute bottom-[2%] min-h-[10%] h-auto w-full px-[1vh] border-t bg-gray-100 rounded-b-2xl">
+                <img src="/blank_avatar.jpg" className="w-[5vh] h-[5vh] rounded-full bg-gray-100 mr-[1vh] border border-gray-300" />
                 <TextareaAutosize
                     id="input"
                     value={inputValue}
@@ -184,7 +185,7 @@ export function DirectMessage ({ user, setViewCallback }: PageProps) {
                     className="border-none outline-none text-[2.5vh] resize-none w-full hide-scrollbar bg-transparent my-[1vh] ml-[2vh]" 
                     placeholder={`Message`} />
                 <span 
-                    className="font-semibold text-[2.5vh] text-blue-500 cursor-pointer mt-[1vh] mx-[2vh]"
+                    className="font-semibold text-[2.5vh] text-blue-500 cursor-pointer mt-[1vh] mx-[2vh] mb-[1vh]"
                     onClick={(e: any) => !loading && handlePostMessage(e)}>
                     Send
                 </span>
