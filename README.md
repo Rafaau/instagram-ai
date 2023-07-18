@@ -10,8 +10,9 @@ Data flow within the application is handled through **Context**. Only the daily 
 
 ## Deployment
 
-The application is deployed on the **Vercel** platform. You can visit it at:
-https://instagram-ai-rafaau.vercel.app/
+~~The application is deployed on the **Vercel** platform. You can visit it at:
+https://instagram-ai-rafaau.vercel.app/~~
+**UNDEPLOYED**
 
 ## Screenshots
 
